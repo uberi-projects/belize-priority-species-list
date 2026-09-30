@@ -29,5 +29,18 @@ merge_taxon <- function(run_taxon) {
         sum(!is.na(out$weight)), " got a computed weight. ", sum(!is.na(out$weight) & out$weight >= 0.20), " at >=20% range share.\n",
         "Saved to ", final_csv_path
     ))
+
+    coord_dir <- "outputs/national_lists/raw_coordinates"
+    if (!dir.exists(coord_dir)) dir.create(coord_dir, recursive = TRUE)
+    coord_cache <- list()
+    main_coord_path <- file.path(coord_dir, paste0(slug, ".rds"))
+    if (file.exists(main_coord_path)) coord_cache <- modifyList(coord_cache, readRDS(main_coord_path))
+    coord_part_paths <- list.files(coord_dir, pattern = paste0("^", slug, "_part[0-9]+\\.rds$"), full.names = TRUE)
+    for (p in coord_part_paths) coord_cache <- modifyList(coord_cache, readRDS(p))
+    if (length(coord_cache) > 0) {
+        saveRDS(coord_cache, main_coord_path)
+        message(paste0("  Merged ", length(coord_part_paths), " coordinate cache part(s) into ", main_coord_path, " (", length(coord_cache), " species with cached points)."))
+    }
+
     invisible(out)
 }
