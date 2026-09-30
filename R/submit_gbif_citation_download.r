@@ -23,4 +23,16 @@ download_key <- occ_download(
 message(paste0("Download submitted. Key: ", download_key))
 saveRDS(as.character(download_key), "outputs/gbif_citation_download_key.rds")
 message("Saved download key to outputs/gbif_citation_download_key.rds")
-message("Check status with occ_download_meta() or on gbif.org - processing can take minutes to hours.")
+
+## Poll Until Complete ------------------------
+terminal_statuses <- c("SUCCEEDED", "KILLED", "FAILED", "CANCELLED")
+repeat {
+    status <- occ_download_meta(download_key)$status
+    message(paste0("  Status: ", status))
+    if (status %in% terminal_statuses) break
+    Sys.sleep(90)
+}
+message(paste0(
+    "Download finished with status: ", status,
+    ". DOI/details at https://www.gbif.org/occurrence/download/", download_key
+))
