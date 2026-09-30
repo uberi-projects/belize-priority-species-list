@@ -1,6 +1,6 @@
 # spatial_weight_functions.r
 
-## Drop interior rings (holes) from a polygon layer ------------------------
+## Drop Interior Rings ------------------------
 drop_holes <- function(x) {
     st_sfc(lapply(st_geometry(x), function(g) {
         if (inherits(g, "MULTIPOLYGON")) {
@@ -13,7 +13,7 @@ drop_holes <- function(x) {
     }), crs = st_crs(x))
 }
 
-## Read Belize's land area (mainland + cayes) and declared maritime jurisdiction ------------------------
+## Read Boundary Sources ------------------------
 belize_land_district <- st_read("basemap/Belize_Basemap.shp", quiet = TRUE) %>%
     st_transform(4326) %>%
     st_make_valid() %>%
@@ -26,8 +26,8 @@ belize_maritime <- st_read("basemap/maritime_belize.txt", quiet = TRUE) %>%
     st_transform(4326) %>%
     st_make_valid()
 
-## Merge every source into a single boundary for intersection ------------------------
+## Merge Boundary Sources ------------------------
 belize_boundary <- st_union(c(belize_land_district, belize_land_national, st_geometry(belize_maritime)))
 
-## Equal-area projection for accurate area calculations ------------------------
+## Define Equal-Area Projection ------------------------
 mollweide_crs <- "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"

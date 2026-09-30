@@ -12,19 +12,19 @@ if (file.exists("outputs/belize_redlist_noDD.rds")) {
     saveRDS(belize_redlist_noDD, "outputs/belize_redlist_noDD.rds")
 }
 
-## Collapse to one row per species, preferring the single most-recently-published assessment ------------------------
+## Collapse To Latest Assessment Per Species ------------------------
 belize_redlist_noDD <- belize_redlist_noDD %>%
     group_by(taxon_scientific_name) %>%
     slice_max(year_published, n = 1, with_ties = FALSE) %>%
     ungroup()
 
-## Create directory for output taxonomy batches ------------------------
+## Create Taxonomy Batch Directory ------------------------
 directory_batches <- "outputs/batches"
 if (!dir.exists(directory_batches)) {
     dir.create(directory_batches, recursive = TRUE)
 }
 
-## Add in missing clades in batches ------------------------
+## Resolve Taxonomy In Batches ------------------------
 batch_indices <- split(
     seq_along(belize_redlist_noDD$taxon_scientific_name),
     cut(seq_along(belize_redlist_noDD$taxon_scientific_name), 25, labels = FALSE)
@@ -59,7 +59,7 @@ for (i in seq_along(batch_indices)) {
     }
 }
 
-## Combine outputs from batches ------------------------
+## Combine Batch Outputs ------------------------
 files <- list.files("outputs/batches", pattern = "^taxonomy_", full.names = TRUE)
 belize_redlist_taxa <- lapply(files, function(f) {
     readRDS(f) %>% mutate(across(everything(), as.character))
@@ -68,7 +68,7 @@ belize_redlist_taxa <- lapply(files, function(f) {
     distinct(gbif_id, .keep_all = TRUE) %>%
     left_join(belize_redlist_noDD, by = c("original_species" = "taxon_scientific_name"))
 
-## Filter to only desired taxa (except fish) ------------------------
+## Filter To Desired Taxa ------------------------
 belize_redlist_mammals <- filter(belize_redlist_taxa, class == "Mammalia", !is.na(gbif_id))
 belize_redlist_birds <- filter(belize_redlist_taxa, class == "Aves", !is.na(gbif_id))
 belize_redlist_reptiles <- filter(belize_redlist_taxa, class == "Squamata", !is.na(gbif_id))
@@ -76,13 +76,13 @@ belize_redlist_turtles <- filter(belize_redlist_taxa, class == "Testudines", !is
 belize_redlist_amphibians <- filter(belize_redlist_taxa, class == "Amphibia", !is.na(gbif_id))
 belize_redlist_corals <- filter(belize_redlist_taxa, class == "Anthozoa", !is.na(gbif_id))
 
-## Create directory for output fishbase objects ------------------------
+## Create FishBase Directory ------------------------
 directory_fishbase <- "outputs/fishbase"
 if (!dir.exists(directory_fishbase)) {
     dir.create(directory_fishbase, recursive = TRUE)
 }
 
-## Filter to only desired taxa (fish) through FishBase species list for Belize ------------------------
+## Filter Fish Via FishBase ------------------------
 if (file.exists("outputs/fishbase/fb_countries.rds")) {
     fb_countries <- readRDS("outputs/fishbase/fb_countries.rds")
     message("Read existing fb countries file (found in outputs)")

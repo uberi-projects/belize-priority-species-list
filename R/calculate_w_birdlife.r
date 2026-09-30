@@ -1,20 +1,20 @@
 # calculate_w_birdlife.r
 
-## Source objects ------------------------
+## Source Objects ------------------------
 source("R/spatial_weight_functions.r")
 
-## Check for required data ------------------------
+## Check Required Data ------------------------
 gpkg_path <- "birdlife_ranges/BOTW_2025.gpkg"
 if (!file.exists(gpkg_path)) {
     stop("birdlife_ranges/BOTW_2025.gpkg not found - see README.md to get your own copy.")
 }
 
-## Fetch list of candidates ------------------------
+## Fetch Candidate List ------------------------
 bird_candidates <- belize_redlist_birds %>%
     distinct(species, gbif_id) %>%
     filter(!is.na(species))
 
-## One batched query for every candidate species ------------------------
+## Query BirdLife Ranges ------------------------
 message(paste0("Querying BirdLife range maps for ", nrow(bird_candidates), " Belize bird candidates..."))
 escaped_names <- gsub("'", "''", bird_candidates$species)
 name_list <- paste0("'", escaped_names, "'", collapse = ",")
@@ -38,7 +38,7 @@ if (length(unmatched) > 0) {
     ))
 }
 
-## Union each species' filtered polygons into one range shape, intersect with Belize ------------------------
+## Union And Intersect Ranges ------------------------
 out <- list()
 for (i in seq_along(matched_species)) {
     sp <- matched_species[i]
