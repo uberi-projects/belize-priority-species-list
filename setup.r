@@ -1,17 +1,10 @@
 # setup.r
-#
-# One-time environment setup for this project. Run this before anything else.
-#
-# Run manually:
-#   Rscript setup.r
-# or, from within an R session in this project directory:
-#   source("setup.r")
 
+# Setup Packages -----------------------------------------
 required_packages <- c(
     "sf", "rgbif", "rredlist", "taxize", "rfishbase", "rangeBuilder", "alphahull", "units",
     "dplyr", "tidyr", "purrr"
 )
-
 if (requireNamespace("renv", quietly = TRUE) && file.exists("renv.lock")) {
     message("renv.lock found - restoring pinned package versions via renv::restore()...")
     renv::restore()
@@ -27,8 +20,3 @@ if (requireNamespace("renv", quietly = TRUE) && file.exists("renv.lock")) {
         message("All required packages already installed.")
     }
 }
-
-message("\nNext steps:")
-message("1. Copy .Renviron.example to .Renviron and fill in your real credentials.")
-message("2. (Optional, for the BirdLife comparison columns) See birdlife_ranges/README.md.")
-message("3. Run run_pipeline.r.")
