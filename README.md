@@ -12,7 +12,8 @@ By using the following steps, the repository can be set up, run, and modified as
 
 All commands below are run from the repo root. Steps 1-3 build the candidate pool and Belize
 boundary; step 4 is the main computation (pick sequential OR parallel); steps 5-6 are optional
-add-ons; step 7 produces the final deliverable.
+add-ons; step 7 produces the final deliverable; step 8 is an optional, separate discovery pipeline
+for species GBIF has Belize records for that the IUCN-based candidate pool (steps 1-3) misses.
 
 **1. Build the candidate pool**: Construct list of candidates for the species priority list. Note that this step is very slow, due to many batched API calls.
 ```r
@@ -119,6 +120,45 @@ source("R/export_alpha_results_by_group.r")
 be built by `R/build_citation_taxon_keys.r` - **that script doesn't exist yet** (planned, not yet
 written). This step isn't runnable until it is.
 
+**8. (Optional) Discover species missing from the IUCN-based candidate pool.**: This finds every species GBIF has Belize
+records for across the focus taxa (Fish excluded - it already draws its own checklist from
+FishBase, not IUCN), screens out ones too widespread to be Belize-relevant, and computes alpha-hull
+range shares for the rest - same method as step 3, applied to a wider net. Kept as a separate output, not merged into the main deliverable.
+
+Size the gap, for informational purposes:
+```r
+source("R/load_packages.r")
+source("R/load_redlist.r")
+source("R/check_gbif_checklist_gaps.r")
+```
+
+Screen every missing species (this step is very slow):
+```r
+source("R/load_packages.r")
+source("R/load_redlist.r")
+source("R/screen_gbif_checklist_gaps.r")
+```
+
+If the summary reports species that failed their count probe (shown as "failed the count probe
+(retriable)"), retry them:
+```r
+source("R/load_packages.r")
+source("R/retry_gbif_checklist_screen.r")
+```
+
+Compute range shares for everything that cleared the screen:
+```r
+source("R/load_packages.r")
+source("R/spatial_weight_functions.r")
+source("R/calculate_w_alphahull_checklist_gaps.r")
+```
+
+Export the results:
+```r
+source("R/load_packages.r")
+source("R/export_alpha_extended_by_group.r")
+```
+
 ## Redoing Work
 
 Most scripts cache their results to `.rds` files in `outputs/` and automatically reuse them
@@ -137,12 +177,16 @@ a step to redo, delete the relevant cache file(s) first, then re-run the step.
 | Just some species within a taxon (keep the rest cached) | remove those species' rows from `<slug>_cache.rds` / `<slug>_cache_part*.rds` |
 | GBIF retry results | `fetch_retry_part*.rds` in `outputs/national_lists/by_group_alpha/` |
 | Common-name lookups | `outputs/vernacular_names_cache.rds` |
+| Extended-list missing-species checklist | `outputs/gbif_checklist_missing_species.rds` |
+| Extended-list screening results | `outputs/gbif_checklist_screen_results.rds` (and `outputs/gbif_checklist_retry_results.rds`, if a retry is in progress) |
+| Extended-list alpha-hull weights | `outputs/gbif_checklist_gap_weights_alpha.rds` (shares the same `raw_coordinates/<slug>.rds` cache as step 3) |
 
 `<slug>` is the taxon name, lowercased with spaces/symbols replaced by underscores (e.g. "Sharks &
 Rays" -> `sharks_rays`).
 
 Not cached - these always fully recompute and overwrite every time you run them: step 5
-(`calculate_w_birdlife.r`), step 6 (`export_alpha_results_by_group.r`), and the merge scripts
+(`calculate_w_birdlife.r`), step 6 (`export_alpha_results_by_group.r`), step 8's
+`check_gbif_checklist_gaps.r` and `export_alpha_extended_by_group.r`, and the merge scripts
 (`merge_alphahull_partitions.r`, `merge_fetch_retry_results.r`).
 
 ## Coordinate Caching & Replay Mode
@@ -158,7 +202,7 @@ two run modes:
   directly - faster, and gives an exact, network-free reproduction of a previous run's numbers.
   Useful for testing a late-stage parameter change (an alpha-hull setting or clip rule) without
   re-fetching GBIF, or for verifying published numbers without relying on GBIF's live, growing
-  database. Turn it on with `use_cached_coords <- TRUE` - for sequential, in `R/calculate_w_alphahull_national_lists.r`; for parallel, a 4th CLI argument, `TRUE`.
+  database. Turn it on with `use_cached_coords <- TRUE` - for sequential, in `R/calculate_w_alphahull_national_lists.r`; for parallel, a 4th CLI argument, `TRUE`. This is also supported for the extended GBIF run beyond IUCN-assessed species.
 
 **Caveat**: both caches only track *whether* a species has been processed, not *what parameters*
 it was processed under. If you change an alpha-hull parameter or clip rule (in
@@ -189,6 +233,11 @@ it was processed under. If you change an alpha-hull parameter or clip rule (in
 11. `calculate_w_birdlife.r` computes a second, independent range-share weight for birds from BirdLife's range maps. See "Acquiring Data" for how to get `BOTW_2025.gpkg`. Range is the union of every BirdLife polygon for a species where presence is "Extant" or "Probably Extant," origin is "Native" or "Reintroduced," and seasonal is "Resident," "Breeding," or "Non-breeding."
 12. `export_alpha_results_by_group.r` builds the final, reader-facing per-taxon CSVs.
 13. `submit_gbif_citation_download.r` submits a GBIF occurrence download covering the species pool used, for a citable DOI.
+14. `check_gbif_checklist_gaps.r` sizes how many Belize-occurring species (per GBIF) are missing from the IUCN-based candidate pool, for the focus taxa (excludes Fish). Diagnostic only.
+15. `screen_gbif_checklist_gaps.r` builds the full missing-species list and screens each by Belize record share, to flag which are worth a full range-share computation.
+16. `retry_gbif_checklist_screen.r` retries missing species that hit a count-probe failure during screening.
+17. `calculate_w_alphahull_checklist_gaps.r` computes alpha-hull range shares for missing species that cleared the screen.
+18. `export_alpha_extended_by_group.r` exports the extended-list results as a companion set of per-taxon CSVs, plus a combined file of genuine >=20% discoveries.
 
 **`renv/`** manages pinned package versions (`renv.lock`).
 
