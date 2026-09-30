@@ -1,6 +1,43 @@
 # Belize Priority Species List
 
-## Acquiring Data
+## Using this Repository
+
+By using the following steps, the repository can be set up, run, and modified as needed.
+1. Create `.Renviron` in the root and populate it according to `.Renviron.example`.
+2. Place required user-supplied files into their appropriate folders. See section "Acquiring Data" below for details.
+3. Run `setup.r`
+
+## Repository Structure
+
+**`basemap/`**
+`basemap/` is an empty folder which is intended to hold user-provided shapefiles.
+
+**`birdlife_ranges/`**
+`birdlife_ranges/` is an empty folder which is intended to hold user-provided BirdLife species ranges data.
+
+**`data/`**
+`data/` contains reference data, such as the table of nationally threated species
+
+**`outputs/`**
+`outputs/`contains any outputs resulting from the scripts
+
+**`R/`**
+`R/`contains R code to create the Belize Priority Species List
+1. Calculate Belize range-share for all Belizean IUCN-assessed birds using BirdLife's species range-maps. See section "Acquiring Data," for information on how to acquire these maps for use in this script. Range is calculated as union of every BirdLife polygon for that species where range is "Extant," or "Probably Extant," where origin is "Native," or "Reintroduced," and where seasonal is "Resident", "Breeding", or "Non-breeding".
+2. `load_redlist.r` fetches RedList data from IUCN, fetch taxonomic data, link data to GBIF species, and filter to desired taxonomic groups, using FishBase for fish taxonomic data. Save results in batches to `outputs/`.
+3. `spatial_weight_functions.r` builds combined Belize political and maritime boundary and equal-area projection (mollweide_crs).
+
+
+**`renv/`**
+`renv/`organizes dependencies
+
+**`/`**
+`/` contains various key files to run the project
+
+
+## Data
+
+### Acquiring Data
 
 Several datasets need to be acquired and placed in the appropriate repository folders before the scripts will work.
 
@@ -18,7 +55,7 @@ Several datasets need to be acquired and placed in the appropriate repository fo
    http://datazone.birdlife.org/species/requestdis. Place in `birdlife_ranges/`.
 
 
-## Pre-Included Data
+### Pre-Included Data
 
 1. **`Belize_Threatened_Species_Table.csv`**  list of species previously assessed as vulnerable  in Belize from Belize Forest Department (Belize Forest Department, 2025; Belize Forest Department Wildlife Programme, 2020).
 
