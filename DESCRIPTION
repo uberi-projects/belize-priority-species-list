@@ -1,0 +1,18 @@
+Package: belizeprioritylist
+Title: Belize Priority Species List (Alpha-Hull Method)
+Type: Project
+Description: Not an R package - this DESCRIPTION file exists only to give renv an explicit,
+    human-readable list of this project's dependencies (via Imports), so package versions can
+    be pinned via renv.lock independently of which R scripts happen to exist yet.
+Imports:
+    sf,
+    rgbif,
+    rredlist,
+    taxize,
+    rfishbase,
+    rangeBuilder,
+    alphahull,
+    units,
+    dplyr,
+    tidyr,
+    purrr

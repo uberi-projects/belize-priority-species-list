@@ -1,0 +1,21 @@
+# BirdLife/IUCN bird range map shapefiles - non-commercial, no-redistribution license.
+# Never commit these. Each user requests their own copy - see birdlife_ranges/README.md.
+/birdlife_ranges/*
+!/birdlife_ranges/.gitkeep
+!/birdlife_ranges/README.md
+
+# R environment variables (real credentials) - never commit
+.Renviron
+
+# R session/history files
+.Rhistory
+.Rapp.history
+.RData
+.RDataTmp
+.Ruserdata
+
+# RStudio
+.Rproj.user/
+
+# renv - renv itself manages renv/library, renv/local, etc. via renv/.gitignore
+# once renv::init() has run; nothing extra needed here.

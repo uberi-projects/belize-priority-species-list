@@ -1,0 +1,11 @@
+# Copy this file to .Renviron (same directory) and fill in values
+
+# IUCN Red List API key - request one at https://apiv3.iucnredlist.org/api/v3/token
+IUCN_REDLIST_KEY=
+
+# GBIF account credentials - register at https://www.gbif.org/user/profile
+# Needed only for submit_gbif_citation_download.r (the citation DOI submission);
+# fetching occurrence data itself needs no credentials.
+GBIF_USER=
+GBIF_PWD=
+GBIF_EMAIL=
