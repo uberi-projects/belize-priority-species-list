@@ -13,7 +13,7 @@ source("R/load_redlist.r")
 source("R/load_national_lists.r")
 
 ## Build Belize Boundary ------------------------
-source("R/spatial_weight_functions.r")
+source("R/build_belize_boundary.r")
 
 ## Compute Alpha-Hull Range Shares ------------------------
 source("R/calculate_w_alphahull_national_lists.r")

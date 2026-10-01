@@ -14,8 +14,8 @@ n_partitions <- as.integer(args[2])
 
 ## Source Scripts ------------------------
 source("R/load_packages.r")
-source("R/spatial_weight_functions.r")
-source("R/alphahull_helpers.r")
+source("R/build_belize_boundary.r")
+source("R/define_alphahull_helpers.r")
 
 ## Select Partition Slice ------------------------
 out_dir <- "outputs/national_lists/by_group_alpha"

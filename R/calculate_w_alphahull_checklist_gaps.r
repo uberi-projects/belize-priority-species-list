@@ -9,7 +9,7 @@ suppressMessages({
 })
 
 ## Source Scripts ------------------------
-source("R/alphahull_helpers.r")
+source("R/define_alphahull_helpers.r")
 
 ## Set Run Mode ------------------------
 if (!exists("use_cached_coords")) use_cached_coords <- FALSE

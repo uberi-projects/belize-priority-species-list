@@ -1,7 +1,7 @@
 # calculate_w_birdlife.r
 
 ## Source Objects ------------------------
-source("R/spatial_weight_functions.r")
+source("R/build_belize_boundary.r")
 
 ## Check Required Data ------------------------
 gpkg_path <- "birdlife_ranges/BOTW_2025.gpkg"

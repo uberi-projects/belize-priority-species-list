@@ -10,8 +10,8 @@ suppressMessages({
 })
 
 ## Source Scripts ------------------------
-source("R/spatial_weight_functions.r")
-source("R/alphahull_helpers.r")
+source("R/build_belize_boundary.r")
+source("R/define_alphahull_helpers.r")
 
 ## Set Run Mode ------------------------
 if (!exists("use_cached_coords")) use_cached_coords <- FALSE

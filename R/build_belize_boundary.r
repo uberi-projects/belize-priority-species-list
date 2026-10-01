@@ -1,4 +1,4 @@
-# spatial_weight_functions.r
+# build_belize_boundary.r
 
 ## Drop Interior Rings ------------------------
 drop_holes <- function(x) {

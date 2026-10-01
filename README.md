@@ -58,7 +58,7 @@ source("R/load_national_lists.r")
 
 **Build the Belize boundary**: Construct the Belize boundary using provided shapefiles.
 ```r
-source("R/spatial_weight_functions.r")
+source("R/build_belize_boundary.r")
 ```
 
 **Compute alpha-hull range shares**: Calculate range shares in Belize using alpha-hull method. There are two options for this step. Sequential is simpler, and parallel faster for larger taxa:
@@ -67,7 +67,7 @@ Sequential, one taxon at a time, can run all taxa in one run. Run:
 ```r
 source("R/load_packages.r")
 source("R/load_redlist.r")
-source("R/spatial_weight_functions.r")
+source("R/build_belize_boundary.r")
 source("R/calculate_w_alphahull_national_lists.r")
 ```
 By default this fetches live GBIF data for every species. To replay from cached coordinates
@@ -158,38 +158,14 @@ The download key is saved to `outputs/gbif_citation_download_key.rds`. Re-runnin
 **(Optional) Discover species missing from the IUCN-based candidate pool.**: This generates range share results for every species GBIF has Belize
 records for across the focus taxa (Fish excluded - it already draws its own checklist from FishBase, not IUCN) including non-IUCN-assessed species. Alpha-hull range share is only computed for species that clear a record-share screen first (`screen_gbif_checklist_gaps.r`), to save on computation. `outputs/gbif_checklist_screen_results.rds` shows all results and whether they pass screening. `outputs/national_lists/by_group_alpha_extended` shows range share results for species that pass screening.
 
-Size the gap, for informational purposes:
 ```r
 source("R/load_packages.r")
 source("R/load_redlist.r")
-source("R/check_gbif_checklist_gaps.r")
-```
-
-Screen every missing species:
-```r
-source("R/load_packages.r")
-source("R/load_redlist.r")
-source("R/screen_gbif_checklist_gaps.r")
-```
-
-If the summary reports species that failed their count probe (shown as "failed the count probe
-(retriable)"), retry them:
-```r
-source("R/load_packages.r")
-source("R/retry_gbif_checklist_screen.r")
-```
-
-Compute range shares for everything that cleared the screen:
-```r
-source("R/load_packages.r")
-source("R/spatial_weight_functions.r")
-source("R/calculate_w_alphahull_checklist_gaps.r")
-```
-
-Export the results:
-```r
-source("R/load_packages.r")
-source("R/export_alpha_extended_by_group.r")
+source("R/check_gbif_checklist_gaps.r") # size gap
+source("R/screen_gbif_checklist_gaps.r") # screen missing species
+source("R/retry_gbif_checklist_screen.r") # if applicable, retry failed species
+source("R/calculate_w_alphahull_checklist_gaps.r") # compute range shares
+source("R/export_alpha_extended_by_group.r") # export results
 ```
 
 ### Pipeline 2: Custom Species
@@ -199,7 +175,7 @@ source("R/export_alpha_extended_by_group.r")
 First, edit the `custom_species` list near the top of the script according to inline usage notes at the variable. Then run:
 ```r
 source("R/load_packages.r")
-source("R/spatial_weight_functions.r")
+source("R/build_belize_boundary.r")
 source("R/calculate_w_alphahull_custom_species.r")
 ```
 Results are written to `outputs/national_lists/custom_species_results.csv`, one row per species,
@@ -303,7 +279,7 @@ two run modes:
 
 **Caveat**: both caches only track *whether* a species has been processed, not *what parameters*
 it was processed under. If you change an alpha-hull parameter or clip rule (in
-`alphahull_helpers.r`) and want that reflected, delete the relevant cache file(s) first (see
+`define_alphahull_helpers.r`) and want that reflected, delete the relevant cache file(s) first (see
 "Redoing Work" above) - otherwise a re-run, in either mode, just replays or skips the old result.
 
 ## Repository Structure
@@ -320,8 +296,8 @@ it was processed under. If you change an alpha-hull parameter or clip rule (in
 1. `load_packages.r` installs and attaches required packages.
 2. `load_redlist.r` fetches RedList data from IUCN, fetches taxonomic data, links data to GBIF species, and filters to desired taxonomic groups, using FishBase for fish taxonomic data. Saves results in batches to `outputs/`.
 3. `load_national_lists.r` merges the national/global priority-species source lists (`data/`) with a direct IUCN pull into one candidate table with resolved GBIF taxon keys.
-4. `spatial_weight_functions.r` builds the combined Belize political and maritime boundary and the equal-area projection (mollweide_crs).
-5. `alphahull_helpers.r` holds shared candidate-pool and per-species alpha-hull logic used by the two runners below. Not meant to be run directly.
+4. `build_belize_boundary.r` builds the combined Belize political and maritime boundary and the equal-area projection (mollweide_crs).
+5. `define_alphahull_helpers.r` holds shared candidate-pool and per-species alpha-hull logic used by the two runners below. Not meant to be run directly.
 6. `calculate_w_alphahull_national_lists.r` runs the alpha-hull range-share calculation taxon by taxon, single-threaded, checkpointed.
 7. `calculate_w_alphahull_parallel_worker.r` is the same calculation split across parallel processes, for the largest taxa.
 8. `merge_alphahull_partitions.r` combines parallel workers' results into each taxon's final CSV.

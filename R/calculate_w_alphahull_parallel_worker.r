@@ -17,8 +17,8 @@ use_cached_coords <- if (length(args) == 4) isTRUE(as.logical(args[4])) else FAL
 ## Source Scripts ------------------------
 source("R/load_packages.r")
 source("R/load_redlist.r")
-source("R/spatial_weight_functions.r")
-source("R/alphahull_helpers.r")
+source("R/build_belize_boundary.r")
+source("R/define_alphahull_helpers.r")
 
 ## Build Candidate Pool ------------------------
 out_dir <- "outputs/national_lists/by_group_alpha"
