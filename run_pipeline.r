@@ -6,7 +6,7 @@ source("R/load_packages.r")
 ## Configure Run ------------------------
 use_cached_coords <- FALSE
 run_extended_list <- FALSE
-run_citation_download <- FALSE
+run_citation_download <- TRUE
 
 ## Build Candidate Pool ------------------------
 source("R/load_redlist.r")

@@ -4,8 +4,6 @@
 IUCN_REDLIST_KEY=
 
 # GBIF account credentials - register at https://www.gbif.org/user/profile
-# Needed only for submit_gbif_citation_download.r (the citation DOI submission);
-# fetching occurrence data itself needs no credentials.
 GBIF_USER=
 GBIF_PWD=
 GBIF_EMAIL=

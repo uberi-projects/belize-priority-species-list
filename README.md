@@ -1,42 +1,67 @@
 # Belize Priority Species List
 
+This codebase creates output tables presenting the IUCN redlist status, Belizean regional endangerment status, and Belizean national responsibility (calculated as range share; alpha-hull method) for all Belizean species of focus taxa, including mammals, birds, reptiles, amphibians, sharks and rays, bony fish, insects, mollusks, corals, fungi, and plants. See METHODS.md for details on methodology and supporting literature for the approach used. This codebase also supports the customizable generation of output tables for any input species, provided they exist on GBIF.
+
+## Table of Contents
+- [Belize Priority Species List](#belize-priority-species-list)
+  - [Table of Contents](#table-of-contents)
+  - [Using this Repository](#using-this-repository)
+  - [Running the Pipeline](#running-the-pipeline)
+    - [Pipeline 1: Full Species Priority List](#pipeline-1-full-species-priority-list)
+      - [Quick Run](#quick-run)
+      - [Manual Run](#manual-run)
+    - [Pipeline 2: Custom Species](#pipeline-2-custom-species)
+  - [Redoing Work](#redoing-work)
+  - [Coordinate Caching \& Replay Mode](#coordinate-caching--replay-mode)
+  - [Repository Structure](#repository-structure)
+  - [Data](#data)
+    - [Acquiring Data](#acquiring-data)
+    - [Pre-Included Data](#pre-included-data)
+  - [Literature Cited](#literature-cited)
+
 ## Using this Repository
 
-By using the following steps, the repository can be set up, run, and modified as needed.
+Two pipelines are supported in this app. Pipeline 1 generates the entire priority species list for Belize, with some allowable customization, including by-group results for each taxa both filtered and unfiltered to priority species list criteria. Pipeline 2 generates non-filtered results for specific user-provided species.
+
+Before starting, some important **SETUP IS REQUIRED**:
 1. Create `.Renviron` in the root and populate it according to `.Renviron.example`.
 2. Place required user-supplied files into their appropriate folders. See section "Acquiring Data" below for details.
 3. Run `setup.r`
-4. Run the pipeline. See "Running the Pipeline" below for the exact order and commands.
+4. Run your preferred pipeline. See "Running the Pipeline" below for details.
 
 ## Running the Pipeline
 
-All commands below are run from the repo root. Steps 1-3 build the candidate pool and Belize
-boundary; step 4 is the main computation (pick sequential OR parallel); step 5 is an optional
-add-on (BirdLife comparison weights); step 6 produces the final, reader-facing deliverable; step 7
-is an optional citable GBIF download; step 8 is an optional, separate discovery pipeline for
-species GBIF has Belize records for that the IUCN-based candidate pool (steps 1-3) misses.
+### Pipeline 1: Full Species Priority List
 
-**Shortcut**: `Rscript run_pipeline.r` runs steps 1-3 (sequential only - see step 3 below for the
-parallel option), retries any transient GBIF fetch failures automatically, runs step 5 if
-`birdlife_ranges/BOTW_2025.gpkg` is present (skips it otherwise), and runs step 6 - all in one
-command. Steps 7 and 8 are opt-in: edit `run_extended_list`/`run_citation_download` near the top of
-`run_pipeline.r` to `TRUE` to include them. The replay-mode flag (see "Coordinate Caching & Replay
-Mode" below) is also set there, as `use_cached_coords`. The step-by-step instructions below are for
-running things individually, or for the parallel options this script doesn't automate.
+#### Quick Run
 
-**1. Build the candidate pool**: Construct list of candidates for the species priority list. Note that this step is very slow, due to many batched API calls.
+`Rscript run_pipeline.r` automatically generates the entire species priority list and GBIF DOI in accordance with METHODS.md. This includes building the candidate pool, loading national and IUCN redlists, building the Belize boundary, computing range shares, retrying transient GBIF fetch failures, building BirdLife-derived range shares for birds ONLY IF BirdLife maps are provided, exports results, and generates a custom GBIF DOI that can be used to cite the GBIF datasets used to calculate the range shares.
+
+If you do not want to create a DOI, set `run_citation_download <- FALSE` near the top of `run_pipeline.r` to skip it.
+
+If you want to generate results for ALL Belizean species, not just IUCN-assessed ones, you may opt in to this step by setting `run_extended_list <- TRUE` near the top of `run_pipeline.r`.
+
+Results may be found in `outputs/national_lists/by_group_alpha` for unfiltered by-taxon tables, `outputs/national_lists/by_group_alpha_results` for filtered by-taxon tables, and `outputs/national_lists/by_group_alpha_extended` for the extended taxon tables including non-IUCN assessed species of focus taxa.
+
+If you want to further customize your run, or redo a specific step, see "Manual Run," below.
+
+#### Manual Run
+
+Below are scripts that pertain to each major action of the pipeline, as well as any built-in customization options.
+
+**Build the candidate pool and load redlists**: Construct list of candidates for the species priority list and load IUCN and national redlists.
 ```r
 source("R/load_packages.r")
 source("R/load_redlist.r")
 source("R/load_national_lists.r")
 ```
 
-**2. Build the Belize boundary**: Construct the Belize boundary using provided shapefiles.
+**Build the Belize boundary**: Construct the Belize boundary using provided shapefiles.
 ```r
 source("R/spatial_weight_functions.r")
 ```
 
-**3. Compute alpha-hull range shares**: Calculate range shares in Belize using alpha-hull method. There are two options for this step. Sequential is simpler, and parallel faster for larger taxa:
+**Compute alpha-hull range shares**: Calculate range shares in Belize using alpha-hull method. There are two options for this step. Sequential is simpler, and parallel faster for larger taxa:
 
 Sequential, one taxon at a time, can run all taxa in one run. Run:
 ```r
@@ -49,8 +74,7 @@ By default this fetches live GBIF data for every species. To replay from cached 
 instead, set `use_cached_coords <- TRUE` near the top of `calculate_w_alphahull_national_lists.r`
 before running - see "Coordinate Caching & Replay Mode" below.
 
-Parallel, for large taxa. No need to run the `source(...)` lines above first - each
-`Rscript` call below starts a fresh R process and loads everything it needs on its own.
+Parallel, for large taxa. No need to run the `source(...)` lines above first.
 1. Pick a taxon. Valid values: `"Amphibians"`, `"Birds"`, `"Corals"`, `"Fish"`, `"Fungi"`, 
     `"Insects"`, `"Mammals"`, `"Mollusks"`, `"Plants"`, `"Reptiles"`, `"Sharks & Rays"`.
 2. Decide how many workers to split the work across (recommendation is 3), and open that many separate
@@ -76,7 +100,7 @@ merge_taxon("Birds")
    way still needs to go through the sequential option above - it automatically skips taxa whose
    final CSV already exists, so it's safe to run after parallel runs to pick up the rest.
 
-**4. (Optional) Retry transient GBIF fetch failures.**: First build the retry input - not yet produced by any script, so build it directly:
+**(Optional) Retry transient GBIF fetch failures.**: First build the retry input - not yet produced by any script, so build it directly:
 ```r
 library(dplyr)
 groups <- c("reptiles", "fungi", "amphibians", "mollusks", "corals", "sharks_rays", "mammals", "insects", "birds", "fish", "plants")
@@ -94,9 +118,7 @@ Sequential:
 Rscript R/retry_gbif_fetch_failures.r 1 1
 ```
 
-Parallel, in separate terminal windows (same pattern as step 3 - start each one without waiting
-for the previous to finish, middle number is that terminal's worker ID, last number is the total
-worker count and must match across all three):
+Parallel, in separate terminal windows:
 ```
 Rscript R/retry_gbif_fetch_failures.r 1 3
 Rscript R/retry_gbif_fetch_failures.r 2 3
@@ -109,7 +131,7 @@ source("R/load_packages.r")
 source("R/merge_fetch_retry_results.r")
 ```
 
-**5. (Optional) BirdLife comparison weights for birds**: Add BirdLife comparison weights, as a second methodology for calculating range share. Needs `birdlife_ranges/BOTW_2025.gpkg`
+**(Optional) BirdLife comparison weights for birds**: Add BirdLife comparison weights, as a second methodology for calculating range share. Needs `birdlife_ranges/BOTW_2025.gpkg`
 acquired (see "Acquiring Data"):
 ```r
 source("R/load_packages.r")
@@ -117,32 +139,24 @@ source("R/load_redlist.r")
 source("R/calculate_w_birdlife.r")
 ```
 
-**6. Export the final, reader-facing CSVs**: This exports a clean, usable set of csvs as results (works with or without step 5 - BirdLife columns
-show "No Map Available" if step 5 was skipped):
+**Export the final CSVs**: This exports a clean, usable set of csvs as results. Results may be found in `outputs/national_lists/by_group_alpha` for unfiltered by-taxon tables, and `outputs/national_lists/by_group_alpha_results` for filtered by-taxon tables.
 ```r
 source("R/load_packages.r")
 source("R/export_alpha_results_by_group.r")
 ```
 
-**7. (Optional) Submit a GBIF citation download.**: Produces a citable GBIF download DOI
-covering the exact species pool used across all 11 taxa. First build the deduplicated taxon-key list:
+**(Optional) Submit a GBIF citation download.**: Produces a citable GBIF download DOI
+covering the datasets used.
 ```r
 source("R/build_citation_taxon_keys.r")
-```
-
-Then submit the download and wait for it - this polls GBIF every 90 seconds until the download is
-ready, and can take a long time:
-```r
 source("R/load_packages.r")
 source("R/submit_gbif_citation_download.r")
 ```
-Re-running this script submits a brand new download (there's no cache/skip check) - only run it
-again if you actually want a fresh DOI, e.g. because the candidate pool changed.
+The download key is saved to `outputs/gbif_citation_download_key.rds`. Re-running this script submits a brand new download
+(there's no cache/skip check).
 
-**8. (Optional) Discover species missing from the IUCN-based candidate pool.**: This finds every species GBIF has Belize
-records for across the focus taxa (Fish excluded - it already draws its own checklist from
-FishBase, not IUCN), screens out ones too widespread to be Belize-relevant, and computes alpha-hull
-range shares for the rest - same method as step 3, applied to a wider net. Kept as a separate output, not merged into the main deliverable.
+**(Optional) Discover species missing from the IUCN-based candidate pool.**: This generates range share results for every species GBIF has Belize
+records for across the focus taxa (Fish excluded - it already draws its own checklist from FishBase, not IUCN) including non-IUCN-assessed species. Alpha-hull range share is only computed for species that clear a record-share screen first (`screen_gbif_checklist_gaps.r`), to save on computation. `outputs/gbif_checklist_screen_results.rds` shows all results and whether they pass screening. `outputs/national_lists/by_group_alpha_extended` shows range share results for species that pass screening.
 
 Size the gap, for informational purposes:
 ```r
@@ -151,7 +165,7 @@ source("R/load_redlist.r")
 source("R/check_gbif_checklist_gaps.r")
 ```
 
-Screen every missing species (this step is very slow):
+Screen every missing species:
 ```r
 source("R/load_packages.r")
 source("R/load_redlist.r")
@@ -178,6 +192,23 @@ source("R/load_packages.r")
 source("R/export_alpha_extended_by_group.r")
 ```
 
+### Pipeline 2: Custom Species
+
+`R/calculate_w_alphahull_custom_species.r` computes results for a user-supplied species, or a short list of species, that you specify directly. It otherwise functions like Pipeline 1, just filtered to only the supplied species.
+
+First, edit the `custom_species` list near the top of the script according to inline usage notes at the variable. Then run:
+```r
+source("R/load_packages.r")
+source("R/spatial_weight_functions.r")
+source("R/calculate_w_alphahull_custom_species.r")
+```
+Results are written to `outputs/national_lists/custom_species_results.csv`, one row per species,
+with `iucn_category` (global) and `belize_ranking`.
+
+By default this also submits a GBIF download covering just this run's species and gets a citable
+DOI for the data used. Set `request_citation_doi <- FALSE` before running to skip this step. Saves download key to
+`outputs/custom_species_citation_download_key.rds`.
+
 ## Redoing Work
 
 Most scripts cache their results to `.rds` files in `outputs/` and automatically reuse them
@@ -185,33 +216,79 @@ instead of recomputing. This makes the pipeline resumable after a stop or crash,
 means re-running a script after changing an input won't redo work that's already cached. To force
 a step to redo, delete the relevant cache file(s) first, then re-run the step.
 
-| To redo... | Delete... |
-|---|---|
-| The IUCN Belize redlist fetch | `outputs/belize_redlist_noDD.rds` |
-| Taxonomy resolution in `load_redlist.r` | `outputs/batches/` (all files, or just the batch(es) covering the species you want re-resolved) |
-| FishBase data | `outputs/fishbase/fb_countries.rds`, `fb_species.rds`, `fb_belize_species.rds` |
-| GBIF taxon-key resolution in `load_national_lists.r` | `outputs/national_lists/national_lists_taxonomy.rds` and `national_lists_taxonomy_fallback.rds` |
-| A taxon's alpha-hull computation, entirely | `outputs/national_lists/by_group_alpha/<slug>.csv`, `<slug>_cache.rds`, and any `<slug>_cache_part*.rds` |
-| ...and also force a live GBIF re-fetch rather than a coordinate replay | additionally delete `outputs/national_lists/raw_coordinates/<slug>.rds` and any `<slug>_part*.rds` |
-| Just some species within a taxon (keep the rest cached) | remove those species' rows from `<slug>_cache.rds` / `<slug>_cache_part*.rds` |
-| GBIF retry results | `fetch_retry_part*.rds` in `outputs/national_lists/by_group_alpha/` |
-| Common-name lookups | `outputs/vernacular_names_cache.rds` |
-| Extended-list missing-species checklist | `outputs/gbif_checklist_missing_species.rds` |
-| Extended-list screening results | `outputs/gbif_checklist_screen_results.rds` (and `outputs/gbif_checklist_retry_results.rds`, if a retry is in progress) |
-| Extended-list alpha-hull weights | `outputs/gbif_checklist_gap_weights_alpha.rds` (shares the same `raw_coordinates/<slug>.rds` cache as step 3) |
+<table>
+  <thead>
+    <tr>
+      <th>To Redo...</th>
+      <th>Delete...</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>The IUCN Belize redlist fetch</td>
+      <td><code>outputs/belize_redlist_noDD.rds</code></td>
+    </tr>
+    <tr>
+      <td>Taxonomy resolution in <code>load_redlist.r</code></td>
+      <td><code>outputs/batches/</code> (all files, or just the batch(es) covering the species you want re-resolved)</td>
+    </tr>
+    <tr>
+      <td>FishBase data</td>
+      <td><code>outputs/fishbase/fb_countries.rds</code>, <code>fb_species.rds</code>, <code>fb_belize_species.rds</code></td>
+    </tr>
+    <tr>
+      <td>GBIF taxon-key resolution in <code>load_national_lists.r</code></td>
+      <td><code>outputs/national_lists/national_lists_taxonomy.rds</code> and <code>national_lists_taxonomy_fallback.rds</code></td>
+    </tr>
+    <tr>
+      <td>A taxon's alpha-hull computation, entirely</td>
+      <td><code>outputs/national_lists/by_group_alpha/&lt;slug&gt;.csv</code>, <code>&lt;slug&gt;_cache.rds</code>, and any <code>&lt;slug&gt;_cache_part*.rds</code></td>
+    </tr>
+    <tr>
+      <td>...and also force a live GBIF re-fetch rather than a coordinate replay</td>
+      <td>additionally delete <code>outputs/national_lists/raw_coordinates/&lt;slug&gt;.rds</code> and any <code>&lt;slug&gt;_part*.rds</code></td>
+    </tr>
+    <tr>
+      <td>Just some species within a taxon (keep the rest cached)</td>
+      <td>remove those species' rows from <code>&lt;slug&gt;_cache.rds</code> / <code>&lt;slug&gt;_cache_part*.rds</code></td>
+    </tr>
+    <tr>
+      <td>GBIF retry results</td>
+      <td><code>fetch_retry_part*.rds</code> in <code>outputs/national_lists/by_group_alpha/</code></td>
+    </tr>
+    <tr>
+      <td>Common-name lookups</td>
+      <td><code>outputs/vernacular_names_cache.rds</code></td>
+    </tr>
+    <tr>
+      <td>Extended-list missing-species checklist</td>
+      <td><code>outputs/gbif_checklist_missing_species.rds</code></td>
+    </tr>
+    <tr>
+      <td>Extended-list screening results</td>
+      <td><code>outputs/gbif_checklist_screen_results.rds</code> (and <code>outputs/gbif_checklist_retry_results.rds</code>, if a retry is in progress)</td>
+    </tr>
+    <tr>
+      <td>Extended-list alpha-hull weights</td>
+      <td><code>outputs/gbif_checklist_gap_weights_alpha.rds</code></td>
+    </tr>
+    <tr>
+      <td>A custom species' result (or all of them)</td>
+      <td>remove its row(s) (or the whole file) at <code>outputs/national_lists/custom_species_results.csv</code></td>
+    </tr>
+    <tr>
+      <td>...and also force a live GBIF re-fetch for custom species rather than a coordinate replay</td>
+      <td>additionally delete <code>outputs/national_lists/raw_coordinates/custom_species.rds</code> (shared across all custom species, not per-taxon)</td>
+    </tr>
+  </tbody>
+</table>
 
 `<slug>` is the taxon name, lowercased with spaces/symbols replaced by underscores (e.g. "Sharks &
 Rays" -> `sharks_rays`).
 
-Not cached - these always fully recompute and overwrite every time you run them: step 5
-(`calculate_w_birdlife.r`), step 6 (`export_alpha_results_by_group.r`), step 7's
-`build_citation_taxon_keys.r` (and re-running `submit_gbif_citation_download.r` submits a whole new
-download, not a resume), step 8's `check_gbif_checklist_gaps.r` and `export_alpha_extended_by_group.r`,
-and the merge scripts (`merge_alphahull_partitions.r`, `merge_fetch_retry_results.r`).
-
 ## Coordinate Caching & Replay Mode
 
-Step 3 caches the raw GBIF coordinate points it fetches for each species, separately from the
+Raw GBIF coordinate points are cached upon fetch for each species, separately from the
 summary results, in `outputs/national_lists/raw_coordinates/` (`<slug>.rds` for the sequential
 run, `<slug>_part<id>.rds` per parallel worker until `merge_taxon()` combines them). This backs
 two run modes:
@@ -222,7 +299,7 @@ two run modes:
   directly - faster, and gives an exact, network-free reproduction of a previous run's numbers.
   Useful for testing a late-stage parameter change (an alpha-hull setting or clip rule) without
   re-fetching GBIF, or for verifying published numbers without relying on GBIF's live, growing
-  database. Turn it on with `use_cached_coords <- TRUE` - for sequential, in `R/calculate_w_alphahull_national_lists.r`; for parallel, a 4th CLI argument, `TRUE`. This is also supported for the extended GBIF run beyond IUCN-assessed species.
+  database. Turn it on with `use_cached_coords <- TRUE` - for sequential, in `R/calculate_w_alphahull_national_lists.r`; for parallel, a 4th CLI argument, `TRUE`. This is also supported for the extended GBIF run beyond IUCN-assessed species, and for Pipeline 2 (custom species) - though custom species cache to their own shared `raw_coordinates/custom_species.rds` rather than a per-taxon file, since they aren't necessarily one of the pipeline's known taxa.
 
 **Caveat**: both caches only track *whether* a species has been processed, not *what parameters*
 it was processed under. If you change an alpha-hull parameter or clip rule (in
@@ -259,10 +336,11 @@ it was processed under. If you change an alpha-hull parameter or clip rule (in
 17. `retry_gbif_checklist_screen.r` retries missing species that hit a count-probe failure during screening.
 18. `calculate_w_alphahull_checklist_gaps.r` computes alpha-hull range shares for missing species that cleared the screen.
 19. `export_alpha_extended_by_group.r` exports the extended-list results as a companion set of per-taxon CSVs, plus a combined file of genuine >=20% discoveries.
+20. `calculate_w_alphahull_custom_species.r` computes alpha-hull range share, global IUCN status, and Belize national status for a user-specified species or short list of species - works standalone on a fresh clone, without the IUCN-based candidate pool. See "Pipeline 2: Custom Species" above.
 
 **`renv/`** manages pinned package versions (`renv.lock`).
 
-**`/`** (repo root) holds `README.md`, `setup.r` (installs/restores packages), `run_pipeline.r` (orchestrates steps 1-6, plus steps 7-8 as opt-in flags - see "Running the Pipeline" above), `DESCRIPTION` (declares dependencies for `renv`), `renv.lock`, `.Renviron.example`, and `LICENSE.txt`.
+**`/`** (repo root) holds `README.md`, `setup.r` (installs/restores packages), `run_pipeline.r` (runs the standard pipeline on default settings), `DESCRIPTION` (declares dependencies for `renv`), `renv.lock`, `.Renviron.example`, and `LICENSE.txt`.
 
 
 ## Data
