@@ -291,14 +291,14 @@ Several datasets need to be acquired and placed in the appropriate repository fo
 
 ## Literature Cited
 
-ArcGIS_DemoBz. (2023a). Belize_Country [Feature layer] [Dataset]. ArcGIS Online. https://www.arcgis.com/home/item.html?id=09608485ef21491d9ea15a9a5f83fe20
+ArcGIS_DemoBz. (2023a). *Belize_Country [Feature layer]* [Dataset]. ArcGIS Online. https://www.arcgis.com/home/item.html?id=09608485ef21491d9ea15a9a5f83fe20
 
-ArcGIS_DemoBz. (2023b). Belize_Nationalwaters [Feature layer] [Dataset]. ArcGIS Online.
+ArcGIS_DemoBz. (2023b). *Belize_Nationalwaters [Feature layer]* [Dataset]. ArcGIS Online.
 
-Belize Forest Department. (2025). Belize National Red List of Threatened Species: Mammals, Birds, Reptiles and Amphibians.
+Belize Forest Department. (2025). *Belize National Red List of Threatened Species: Mammals, Birds, Reptiles and Amphibians*.
 
-Belize Forest Department Wildlife Programme. (2020). National IUCN Red List for Threatened Avian Species—Belize.
+Belize Forest Department Wildlife Programme. (2020). *National IUCN Red List for Threatened Avian Species—Belize*.
 
-BirdLife International and Handbook of the Birds of the World. (2025). Bird species distribution maps of the world (Version 2025.2) [Dataset]. http://datazone.birdlife.org/species/requestdis
+BirdLife International and Handbook of the Birds of the World. (2025). *Bird species distribution maps of the world* (Version 2025.2) [Dataset]. http://datazone.birdlife.org/species/requestdis
 
-Meerman, J. C. (2013). Belize Basemap [Dataset]. Biodiversity and Environmental Resource Data System of Belize. http://www.biodiversity.bz/
+Meerman, J. C. (2013). *Belize Basemap* [Dataset]. Biodiversity and Environmental Resource Data System of Belize. http://www.biodiversity.bz/
