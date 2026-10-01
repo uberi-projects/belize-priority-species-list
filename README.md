@@ -16,6 +16,14 @@ add-on (BirdLife comparison weights); step 6 produces the final, reader-facing d
 is an optional citable GBIF download; step 8 is an optional, separate discovery pipeline for
 species GBIF has Belize records for that the IUCN-based candidate pool (steps 1-3) misses.
 
+**Shortcut**: `Rscript run_pipeline.r` runs steps 1-3 (sequential only - see step 3 below for the
+parallel option), retries any transient GBIF fetch failures automatically, runs step 5 if
+`birdlife_ranges/BOTW_2025.gpkg` is present (skips it otherwise), and runs step 6 - all in one
+command. Steps 7 and 8 are opt-in: edit `run_extended_list`/`run_citation_download` near the top of
+`run_pipeline.r` to `TRUE` to include them. The replay-mode flag (see "Coordinate Caching & Replay
+Mode" below) is also set there, as `use_cached_coords`. The step-by-step instructions below are for
+running things individually, or for the parallel options this script doesn't automate.
+
 **1. Build the candidate pool**: Construct list of candidates for the species priority list. Note that this step is very slow, due to many batched API calls.
 ```r
 source("R/load_packages.r")
@@ -254,7 +262,7 @@ it was processed under. If you change an alpha-hull parameter or clip rule (in
 
 **`renv/`** manages pinned package versions (`renv.lock`).
 
-**`/`** (repo root) holds `README.md`, `setup.r` (installs/restores packages), `DESCRIPTION` (declares dependencies for `renv`), `renv.lock`, `.Renviron.example`, and `LICENSE.txt`.
+**`/`** (repo root) holds `README.md`, `setup.r` (installs/restores packages), `run_pipeline.r` (orchestrates steps 1-6, plus steps 7-8 as opt-in flags - see "Running the Pipeline" above), `DESCRIPTION` (declares dependencies for `renv`), `renv.lock`, `.Renviron.example`, and `LICENSE.txt`.
 
 
 ## Data

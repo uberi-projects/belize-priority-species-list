@@ -12,7 +12,7 @@ suppressMessages({
 source("R/alphahull_helpers.r")
 
 ## Set Run Mode ------------------------
-use_cached_coords <- FALSE
+if (!exists("use_cached_coords")) use_cached_coords <- FALSE
 
 ## Select Candidates ------------------------
 screened <- readRDS("outputs/gbif_checklist_screen_results.rds")

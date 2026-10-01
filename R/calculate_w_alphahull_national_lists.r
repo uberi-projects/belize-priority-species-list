@@ -15,7 +15,7 @@ source("R/alphahull_helpers.r")
 taxon_queue <- c("Fungi", "Amphibians", "Mollusks", "Corals", "Sharks & Rays", "Mammals", "Insects", "Reptiles", "Birds", "Fish", "Plants")
 
 ## Set Run Mode ------------------------
-use_cached_coords <- FALSE
+if (!exists("use_cached_coords")) use_cached_coords <- FALSE
 
 ## Loop Checkpointed Batch Runs ------------------------
 out_dir <- "outputs/national_lists/by_group_alpha"
