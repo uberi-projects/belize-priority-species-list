@@ -1,15 +1,15 @@
 # load_redlist.r
 
 ## Use IUCN API to get Belize redlist (needs to be set in .Renviron) ------------------------
-if (file.exists("outputs/belize_redlist_noDD.rds")) {
-    belize_redlist_noDD <- readRDS("outputs/belize_redlist_noDD.rds")
+if (file.exists("outputs/intermediates/redlist/belize_redlist_noDD.rds")) {
+    belize_redlist_noDD <- readRDS("outputs/intermediates/redlist/belize_redlist_noDD.rds")
     message("Read existing redlist file (found in outputs)")
 } else {
     belize_redlist <- rl_countries("BZ", key = Sys.getenv("IUCN_REDLIST_KEY"), latest = TRUE)
     belize_redlist_noDD <- belize_redlist$assessments %>%
         filter(red_list_category_code != "DD") %>%
         select(taxon_scientific_name, red_list_category_code, year_published)
-    saveRDS(belize_redlist_noDD, "outputs/belize_redlist_noDD.rds")
+    saveRDS(belize_redlist_noDD, "outputs/intermediates/redlist/belize_redlist_noDD.rds")
 }
 
 ## Collapse To Latest Assessment Per Species ------------------------
@@ -19,7 +19,7 @@ belize_redlist_noDD <- belize_redlist_noDD %>%
     ungroup()
 
 ## Create Taxonomy Batch Directory ------------------------
-directory_batches <- "outputs/batches"
+directory_batches <- "outputs/intermediates/redlist/batches"
 if (!dir.exists(directory_batches)) {
     dir.create(directory_batches, recursive = TRUE)
 }
@@ -30,7 +30,7 @@ batch_indices <- split(
     cut(seq_along(belize_redlist_noDD$taxon_scientific_name), 25, labels = FALSE)
 )
 for (i in seq_along(batch_indices)) {
-    batch_file <- paste0("outputs/batches/taxonomy_batch_", i, ".rds")
+    batch_file <- paste0("outputs/intermediates/redlist/batches/taxonomy_batch_", i, ".rds")
     if (file.exists(batch_file)) {
         message("Skipping batch ", i, " (found in outputs)")
     } else {
@@ -60,7 +60,7 @@ for (i in seq_along(batch_indices)) {
 }
 
 ## Combine Batch Outputs ------------------------
-files <- list.files("outputs/batches", pattern = "^taxonomy_", full.names = TRUE)
+files <- list.files("outputs/intermediates/redlist/batches", pattern = "^taxonomy_", full.names = TRUE)
 belize_redlist_taxa <- lapply(files, function(f) {
     readRDS(f) %>% mutate(across(everything(), as.character))
 }) %>%
@@ -77,28 +77,28 @@ belize_redlist_amphibians <- filter(belize_redlist_taxa, class == "Amphibia", !i
 belize_redlist_corals <- filter(belize_redlist_taxa, class == "Anthozoa", !is.na(gbif_id))
 
 ## Create FishBase Directory ------------------------
-directory_fishbase <- "outputs/fishbase"
+directory_fishbase <- "outputs/intermediates/fishbase"
 if (!dir.exists(directory_fishbase)) {
     dir.create(directory_fishbase, recursive = TRUE)
 }
 
 ## Filter Fish Via FishBase ------------------------
-if (file.exists("outputs/fishbase/fb_countries.rds")) {
-    fb_countries <- readRDS("outputs/fishbase/fb_countries.rds")
+if (file.exists("outputs/intermediates/fishbase/fb_countries.rds")) {
+    fb_countries <- readRDS("outputs/intermediates/fishbase/fb_countries.rds")
     message("Read existing fb countries file (found in outputs)")
 } else {
     fb_countries <- fb_tbl("country")
-    saveRDS(fb_countries, "outputs/fishbase/fb_countries.rds")
+    saveRDS(fb_countries, "outputs/intermediates/fishbase/fb_countries.rds")
 }
-if (file.exists("outputs/fishbase/fb_species.rds")) {
-    fb_species <- readRDS("outputs/fishbase/fb_species.rds")
+if (file.exists("outputs/intermediates/fishbase/fb_species.rds")) {
+    fb_species <- readRDS("outputs/intermediates/fishbase/fb_species.rds")
     message("Read existing fb species file (found in outputs)")
 } else {
     fb_species <- fb_tbl("species")
-    saveRDS(fb_species, "outputs/fishbase/fb_species.rds")
+    saveRDS(fb_species, "outputs/intermediates/fishbase/fb_species.rds")
 }
-if (file.exists("outputs/fishbase/fb_belize_species.rds")) {
-    fb_belize_species <- readRDS("outputs/fishbase/fb_belize_species.rds")
+if (file.exists("outputs/intermediates/fishbase/fb_belize_species.rds")) {
+    fb_belize_species <- readRDS("outputs/intermediates/fishbase/fb_belize_species.rds")
     message("Read existing fb Belize species file (found in outputs)")
 } else {
     fb_belize_species <- fb_countries %>%
@@ -114,7 +114,7 @@ if (file.exists("outputs/fishbase/fb_belize_species.rds")) {
         ) %>%
         unnest_wider(gbif_match)
     fb_belize_species <- select(fb_belize_species, speciesKey, taxon_scientific_name, species, Freshwater, Brackish, Saltwater, Habitats)
-    saveRDS(fb_belize_species, "outputs/fishbase/fb_belize_species.rds")
+    saveRDS(fb_belize_species, "outputs/intermediates/fishbase/fb_belize_species.rds")
 }
 belize_redlist_taxa_fishbase <- fb_belize_species %>%
     distinct(taxon_scientific_name, species, .keep_all = TRUE) %>%

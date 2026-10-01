@@ -74,7 +74,8 @@ for (taxon in names(focus_taxa)) {
 ## Export Summary ------------------------
 summary_table <- bind_rows(results)
 print(summary_table, row.names = FALSE)
-saveRDS(summary_table, "outputs/gbif_checklist_gap_summary.rds")
+if (!dir.exists("outputs/intermediates/extended")) dir.create("outputs/intermediates/extended", recursive = TRUE)
+saveRDS(summary_table, "outputs/intermediates/extended/gbif_checklist_gap_summary.rds")
 
 message(paste0(
     "\nTotal missing across all focus taxa (excl. fish): ", sum(summary_table$missing)

@@ -70,9 +70,10 @@ weights_birdlife <- bind_rows(out) %>%
     left_join(bird_candidates, by = "species") %>%
     select(gbif_id, species, weight_birdlife, n_features_birdlife, note_birdlife) %>%
     arrange(desc(weight_birdlife))
-if (!dir.exists("outputs/national_lists")) dir.create("outputs/national_lists", recursive = TRUE)
-saveRDS(weights_birdlife, "outputs/national_lists/weights_belize_birdlife.rds")
-write.csv(weights_birdlife, "outputs/national_lists/weights_belize_birdlife.csv", row.names = FALSE, na = "")
+if (!dir.exists("outputs/intermediates/primary")) dir.create("outputs/intermediates/primary", recursive = TRUE)
+if (!dir.exists("outputs/results/primary")) dir.create("outputs/results/primary", recursive = TRUE)
+saveRDS(weights_birdlife, "outputs/intermediates/primary/weights_belize_birdlife.rds")
+write.csv(weights_birdlife, "outputs/results/primary/weights_belize_birdlife.csv", row.names = FALSE, na = "")
 message(paste0(
     sum(!is.na(weights_birdlife$weight_birdlife)), " of ", nrow(weights_birdlife),
     " Belize bird candidates got a computed BirdLife-polygon weight. ",

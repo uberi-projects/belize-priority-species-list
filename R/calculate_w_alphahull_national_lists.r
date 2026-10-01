@@ -18,14 +18,16 @@ taxon_queue <- c("Fungi", "Amphibians", "Mollusks", "Corals", "Sharks & Rays", "
 if (!exists("use_cached_coords")) use_cached_coords <- FALSE
 
 ## Loop Checkpointed Batch Runs ------------------------
-out_dir <- "outputs/national_lists/by_group_alpha"
-coord_dir <- "outputs/national_lists/raw_coordinates"
-if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+results_dir <- "outputs/results/primary/by_group_all"
+cache_dir <- "outputs/intermediates/primary/by_group"
+coord_dir <- "outputs/intermediates/primary/raw_coordinates"
+if (!dir.exists(results_dir)) dir.create(results_dir, recursive = TRUE)
+if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive = TRUE)
 if (!dir.exists(coord_dir)) dir.create(coord_dir, recursive = TRUE)
 batch_size <- 20
 for (run_taxon in taxon_queue) {
     slug <- gsub("[^a-z0-9]+", "_", tolower(run_taxon))
-    final_csv_path <- file.path(out_dir, paste0(slug, ".csv"))
+    final_csv_path <- file.path(results_dir, paste0(slug, ".csv"))
     if (file.exists(final_csv_path)) {
         message(paste0("\n", run_taxon, ": already completed (", final_csv_path, " exists) - skipping.\n"))
         next
@@ -36,7 +38,7 @@ for (run_taxon in taxon_queue) {
     message(paste0(run_taxon, ": ", nrow(candidates), " IUCN-rated candidates (all categories, including LC)."))
     print(table(candidates$red_list_category_code, useNA = "ifany"))
 
-    cache_path <- file.path(out_dir, paste0(slug, "_cache.rds"))
+    cache_path <- file.path(cache_dir, paste0(slug, "_cache.rds"))
     already_done <- if (file.exists(cache_path)) readRDS(cache_path) else NULL
     remaining <- if (!is.null(already_done)) candidates %>% filter(!(gbif_id %in% already_done$gbif_id)) else candidates
     message(paste0(nrow(candidates) - nrow(remaining), " already checkpointed, ", nrow(remaining), " remaining."))

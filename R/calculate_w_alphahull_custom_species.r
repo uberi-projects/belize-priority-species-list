@@ -62,13 +62,14 @@ national_lookup <- national_raw %>%
 custom_species <- custom_species %>% left_join(national_lookup, by = c("species" = "scientific_name"))
 
 ## Select Remaining Species ------------------------
-out_path <- "outputs/national_lists/custom_species_results.csv"
+if (!dir.exists("outputs/results/custom")) dir.create("outputs/results/custom", recursive = TRUE)
+out_path <- "outputs/results/custom/custom_species_results.csv"
 already_done <- if (file.exists(out_path)) read.csv(out_path, colClasses = c(gbif_id = "character")) else NULL
 remaining <- if (!is.null(already_done)) custom_species %>% filter(!(gbif_id %in% already_done$gbif_id)) else custom_species
 message(paste0(nrow(custom_species) - nrow(remaining), " already computed, ", nrow(remaining), " remaining."))
 
 ## Compute Range Shares ------------------------
-coord_dir <- "outputs/national_lists/raw_coordinates"
+coord_dir <- "outputs/intermediates/primary/raw_coordinates"
 if (!dir.exists(coord_dir)) dir.create(coord_dir, recursive = TRUE)
 coord_cache_path <- file.path(coord_dir, "custom_species.rds")
 coord_cache <- if (file.exists(coord_cache_path)) readRDS(coord_cache_path) else list()
@@ -108,7 +109,8 @@ if (request_citation_doi) {
         email = Sys.getenv("GBIF_EMAIL")
     )
     message(paste0("Citation download submitted. Key: ", download_key))
-    saveRDS(as.character(download_key), "outputs/custom_species_citation_download_key.rds")
+    if (!dir.exists("outputs/results/citation")) dir.create("outputs/results/citation", recursive = TRUE)
+    saveRDS(as.character(download_key), "outputs/results/citation/custom_species_citation_download_key.rds")
     terminal_statuses <- c("SUCCEEDED", "KILLED", "FAILED", "CANCELLED")
     repeat {
         status <- occ_download_meta(download_key)$status

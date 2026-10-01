@@ -41,7 +41,7 @@ If you do not want to create a DOI, set `run_citation_download <- FALSE` near th
 
 If you want to generate results for ALL Belizean species, not just IUCN-assessed ones, you may opt in to this step by setting `run_extended_list <- TRUE` near the top of `run_pipeline.r`.
 
-Results may be found in `outputs/national_lists/by_group_alpha` for unfiltered by-taxon tables, `outputs/national_lists/by_group_alpha_results` for filtered by-taxon tables, and `outputs/national_lists/by_group_alpha_extended` for the extended taxon tables including non-IUCN assessed species of focus taxa.
+Results may be found in `outputs/results/primary/by_group_all` for unfiltered by-taxon tables, `outputs/results/primary/by_group_filtered` for filtered by-taxon tables, and `outputs/results/extended/by_group` for the extended taxon tables including non-IUCN assessed species of focus taxa.
 
 If you want to further customize your run, or redo a specific step, see "Manual Run," below.
 
@@ -105,11 +105,11 @@ merge_taxon("Birds")
 library(dplyr)
 groups <- c("reptiles", "fungi", "amphibians", "mollusks", "corals", "sharks_rays", "mammals", "insects", "birds", "fish", "plants")
 failed <- bind_rows(lapply(groups, function(g) {
-    read.csv(file.path("outputs/national_lists/by_group_alpha", paste0(g, ".csv")), colClasses = c(gbif_id = "character")) %>%
+    read.csv(file.path("outputs/results/primary/by_group_all", paste0(g, ".csv")), colClasses = c(gbif_id = "character")) %>%
         filter(note == "GBIF fetch failed after retries") %>%
         transmute(gbif_id, species, clip, taxon = g)
 }))
-saveRDS(failed, "outputs/national_lists/by_group_alpha/fetch_failed_for_retry.rds")
+saveRDS(failed, "outputs/intermediates/primary/by_group/fetch_failed_for_retry.rds")
 ```
 Then retry - sequential (simpler) or parallel (faster for a large retry set):
 
@@ -139,7 +139,7 @@ source("R/load_redlist.r")
 source("R/calculate_w_birdlife.r")
 ```
 
-**Export the final CSVs**: This exports a clean, usable set of csvs as results. Results may be found in `outputs/national_lists/by_group_alpha` for unfiltered by-taxon tables, and `outputs/national_lists/by_group_alpha_results` for filtered by-taxon tables.
+**Export the final CSVs**: This exports a clean, usable set of csvs as results. Results may be found in `outputs/results/primary/by_group_all` for unfiltered by-taxon tables, and `outputs/results/primary/by_group_filtered` for filtered by-taxon tables.
 ```r
 source("R/load_packages.r")
 source("R/export_alpha_results_by_group.r")
@@ -152,11 +152,11 @@ source("R/build_citation_taxon_keys.r")
 source("R/load_packages.r")
 source("R/submit_gbif_citation_download.r")
 ```
-The download key is saved to `outputs/gbif_citation_download_key.rds`. Re-running this script submits a brand new download
+The download key is saved to `outputs/results/citation/gbif_citation_download_key.rds`. Re-running this script submits a brand new download
 (there's no cache/skip check).
 
 **(Optional) Discover species missing from the IUCN-based candidate pool.**: This generates range share results for every species GBIF has Belize
-records for across the focus taxa (Fish excluded - it already draws its own checklist from FishBase, not IUCN) including non-IUCN-assessed species. Alpha-hull range share is only computed for species that clear a record-share screen first (`screen_gbif_checklist_gaps.r`), to save on computation. `outputs/gbif_checklist_screen_results.rds` shows all results and whether they pass screening. `outputs/national_lists/by_group_alpha_extended` shows range share results for species that pass screening.
+records for across the focus taxa (Fish excluded - it already draws its own checklist from FishBase, not IUCN) including non-IUCN-assessed species. Alpha-hull range share is only computed for species that clear a record-share screen first (`screen_gbif_checklist_gaps.r`), to save on computation. `outputs/intermediates/extended/gbif_checklist_screen_results.rds` shows all results and whether they pass screening. `outputs/results/extended/by_group` shows range share results for species that pass screening.
 
 ```r
 source("R/load_packages.r")
@@ -178,12 +178,12 @@ source("R/load_packages.r")
 source("R/build_belize_boundary.r")
 source("R/calculate_w_alphahull_custom_species.r")
 ```
-Results are written to `outputs/national_lists/custom_species_results.csv`, one row per species,
+Results are written to `outputs/results/custom/custom_species_results.csv`, one row per species,
 with `iucn_category` (global) and `belize_ranking`.
 
 By default this also submits a GBIF download covering just this run's species and gets a citable
 DOI for the data used. Set `request_citation_doi <- FALSE` before running to skip this step. Saves download key to
-`outputs/custom_species_citation_download_key.rds`.
+`outputs/results/citation/custom_species_citation_download_key.rds`.
 
 ## Redoing Work
 
@@ -202,27 +202,27 @@ a step to redo, delete the relevant cache file(s) first, then re-run the step.
   <tbody>
     <tr>
       <td>The IUCN Belize redlist fetch</td>
-      <td><code>outputs/belize_redlist_noDD.rds</code></td>
+      <td><code>outputs/intermediates/redlist/belize_redlist_noDD.rds</code></td>
     </tr>
     <tr>
       <td>Taxonomy resolution in <code>load_redlist.r</code></td>
-      <td><code>outputs/batches/</code> (all files, or just the batch(es) covering the species you want re-resolved)</td>
+      <td><code>outputs/intermediates/redlist/batches/</code> (all files, or just the batch(es) covering the species you want re-resolved)</td>
     </tr>
     <tr>
       <td>FishBase data</td>
-      <td><code>outputs/fishbase/fb_countries.rds</code>, <code>fb_species.rds</code>, <code>fb_belize_species.rds</code></td>
+      <td><code>outputs/intermediates/fishbase/fb_countries.rds</code>, <code>fb_species.rds</code>, <code>fb_belize_species.rds</code></td>
     </tr>
     <tr>
       <td>GBIF taxon-key resolution in <code>load_national_lists.r</code></td>
-      <td><code>outputs/national_lists/national_lists_taxonomy.rds</code> and <code>national_lists_taxonomy_fallback.rds</code></td>
+      <td><code>outputs/intermediates/national_lists/national_lists_taxonomy.rds</code> and <code>national_lists_taxonomy_fallback.rds</code></td>
     </tr>
     <tr>
       <td>A taxon's alpha-hull computation, entirely</td>
-      <td><code>outputs/national_lists/by_group_alpha/&lt;slug&gt;.csv</code>, <code>&lt;slug&gt;_cache.rds</code>, and any <code>&lt;slug&gt;_cache_part*.rds</code></td>
+      <td><code>outputs/results/primary/by_group_all/&lt;slug&gt;.csv</code> and, in <code>outputs/intermediates/primary/by_group/</code>, <code>&lt;slug&gt;_cache.rds</code> and any <code>&lt;slug&gt;_cache_part*.rds</code></td>
     </tr>
     <tr>
       <td>...and also force a live GBIF re-fetch rather than a coordinate replay</td>
-      <td>additionally delete <code>outputs/national_lists/raw_coordinates/&lt;slug&gt;.rds</code> and any <code>&lt;slug&gt;_part*.rds</code></td>
+      <td>additionally delete <code>outputs/intermediates/primary/raw_coordinates/&lt;slug&gt;.rds</code> and any <code>&lt;slug&gt;_part*.rds</code></td>
     </tr>
     <tr>
       <td>Just some species within a taxon (keep the rest cached)</td>
@@ -230,31 +230,31 @@ a step to redo, delete the relevant cache file(s) first, then re-run the step.
     </tr>
     <tr>
       <td>GBIF retry results</td>
-      <td><code>fetch_retry_part*.rds</code> in <code>outputs/national_lists/by_group_alpha/</code></td>
+      <td><code>fetch_retry_part*.rds</code> in <code>outputs/intermediates/primary/by_group/</code></td>
     </tr>
     <tr>
       <td>Common-name lookups</td>
-      <td><code>outputs/vernacular_names_cache.rds</code></td>
+      <td><code>outputs/intermediates/primary/vernacular_names_cache.rds</code></td>
     </tr>
     <tr>
       <td>Extended-list missing-species checklist</td>
-      <td><code>outputs/gbif_checklist_missing_species.rds</code></td>
+      <td><code>outputs/intermediates/extended/gbif_checklist_missing_species.rds</code></td>
     </tr>
     <tr>
       <td>Extended-list screening results</td>
-      <td><code>outputs/gbif_checklist_screen_results.rds</code> (and <code>outputs/gbif_checklist_retry_results.rds</code>, if a retry is in progress)</td>
+      <td><code>outputs/intermediates/extended/gbif_checklist_screen_results.rds</code> (and <code>outputs/intermediates/extended/gbif_checklist_retry_results.rds</code>, if a retry is in progress)</td>
     </tr>
     <tr>
       <td>Extended-list alpha-hull weights</td>
-      <td><code>outputs/gbif_checklist_gap_weights_alpha.rds</code></td>
+      <td><code>outputs/intermediates/extended/gbif_checklist_gap_weights_alpha.rds</code></td>
     </tr>
     <tr>
       <td>A custom species' result (or all of them)</td>
-      <td>remove its row(s) (or the whole file) at <code>outputs/national_lists/custom_species_results.csv</code></td>
+      <td>remove its row(s) (or the whole file) at <code>outputs/results/custom/custom_species_results.csv</code></td>
     </tr>
     <tr>
       <td>...and also force a live GBIF re-fetch for custom species rather than a coordinate replay</td>
-      <td>additionally delete <code>outputs/national_lists/raw_coordinates/custom_species.rds</code> (shared across all custom species, not per-taxon)</td>
+      <td>additionally delete <code>outputs/intermediates/primary/raw_coordinates/custom_species.rds</code> (shared across all custom species, not per-taxon)</td>
     </tr>
   </tbody>
 </table>
@@ -265,7 +265,7 @@ Rays" -> `sharks_rays`).
 ## Coordinate Caching & Replay Mode
 
 Raw GBIF coordinate points are cached upon fetch for each species, separately from the
-summary results, in `outputs/national_lists/raw_coordinates/` (`<slug>.rds` for the sequential
+summary results, in `outputs/intermediates/primary/raw_coordinates/` (`<slug>.rds` for the sequential
 run, `<slug>_part<id>.rds` per parallel worker until `merge_taxon()` combines them). This backs
 two run modes:
 
@@ -290,7 +290,19 @@ it was processed under. If you change an alpha-hull parameter or clip rule (in
 
 **`data/`** contains reference data, such as the table of nationally threated species
 
-**`outputs/`** contains any outputs resulting from the scripts
+**`outputs/`** is gitignored, like `basemap/` and `birdlife_ranges/` - only the folder structure
+(via `.gitkeep`) is tracked, not the generated data itself. It's where everything the scripts
+produce lands, split into two trees:
+- **`outputs/intermediates/`** - working objects (`.rds` caches/checkpoints) organized by pipeline
+  stage: `redlist/`, `fishbase/`, `national_lists/`, `primary/` (main alpha-hull computation,
+  including `raw_coordinates/` and per-taxon `by_group/` checkpoints), `extended/`. Machinery for
+  resuming or rebuilding a run, not meant to be read directly.
+- **`outputs/results/`** - the human-facing deliverables, organized by category:
+  `primary/by_group_all` (unfiltered per-taxon CSVs), `primary/by_group_filtered` (the final
+  priority list), `extended/` (the extended-list companion CSVs), `custom/` (Pipeline 2 output),
+  `citation/` (taxon-key list and download-key files for the citable DOIs). Note
+  `primary/by_group_all` is read back in by a few later steps (export, retry, citation key
+  building) as well as being a result in its own right.
 
 **`R/`** contains R code to create the Belize Priority Species List
 1. `load_packages.r` installs and attaches required packages.

@@ -4,7 +4,7 @@
 suppressMessages(library(rgbif))
 
 ## Load Taxon Keys ------------------------
-keys <- readRDS("outputs/gbif_download_taxon_keys.rds")
+keys <- readRDS("outputs/results/citation/gbif_download_taxon_keys.rds")
 message(paste0("Submitting download for ", length(keys), " taxon keys..."))
 
 ## Submit Download ------------------------
@@ -21,8 +21,8 @@ download_key <- occ_download(
 
 ## Save Download Key ------------------------
 message(paste0("Download submitted. Key: ", download_key))
-saveRDS(as.character(download_key), "outputs/gbif_citation_download_key.rds")
-message("Saved download key to outputs/gbif_citation_download_key.rds")
+saveRDS(as.character(download_key), "outputs/results/citation/gbif_citation_download_key.rds")
+message("Saved download key to outputs/results/citation/gbif_citation_download_key.rds")
 
 ## Poll Until Complete ------------------------
 terminal_statuses <- c("SUCCEEDED", "KILLED", "FAILED", "CANCELLED")

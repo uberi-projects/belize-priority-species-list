@@ -4,15 +4,16 @@
 suppressMessages(library(dplyr))
 
 ## Load Retry Results ------------------------
-out_dir <- "outputs/national_lists/by_group_alpha"
-parts <- list.files(out_dir, pattern = "^fetch_retry_part[0-9]+\\.rds$", full.names = TRUE)
+cache_dir <- "outputs/intermediates/primary/by_group"
+results_dir <- "outputs/results/primary/by_group_all"
+parts <- list.files(cache_dir, pattern = "^fetch_retry_part[0-9]+\\.rds$", full.names = TRUE)
 retried <- bind_rows(lapply(parts, readRDS))
 message(paste0(nrow(retried), " retried species to merge in."))
 
 ## Merge Retry Results ------------------------
 groups <- c("reptiles", "fungi", "amphibians", "mollusks", "corals", "sharks_rays", "mammals", "insects", "birds", "fish", "plants")
 for (g in groups) {
-    csv_path <- file.path(out_dir, paste0(g, ".csv"))
+    csv_path <- file.path(results_dir, paste0(g, ".csv"))
     d <- read.csv(csv_path, stringsAsFactors = FALSE, colClasses = c(gbif_id = "character"))
     this_group_retries <- retried %>% filter(taxon == g)
     if (nrow(this_group_retries) == 0) next

@@ -5,7 +5,7 @@ suppressMessages(library(rgbif))
 min_belize_share <- 0.02
 
 ## Select Retry Candidates ------------------------
-screen_cache_path <- "outputs/gbif_checklist_screen_results.rds"
+screen_cache_path <- "outputs/intermediates/extended/gbif_checklist_screen_results.rds"
 all_results <- readRDS(screen_cache_path)
 retry_candidates <- all_results %>% filter(is.na(clears_gate)) %>% select(gbif_id, species, taxon)
 message(paste0(nrow(retry_candidates), " species need a retry (stuck on a genuine count-probe failure)."))
@@ -55,7 +55,7 @@ screen_one <- function(gbif_id) {
 }
 
 ## Select Remaining Species ------------------------
-retry_cache_path <- "outputs/gbif_checklist_retry_results.rds"
+retry_cache_path <- "outputs/intermediates/extended/gbif_checklist_retry_results.rds"
 retried_so_far <- if (file.exists(retry_cache_path)) readRDS(retry_cache_path) else NULL
 remaining <- if (!is.null(retried_so_far)) {
     retry_candidates %>% filter(!(gbif_id %in% retried_so_far$gbif_id))

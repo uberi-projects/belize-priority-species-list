@@ -48,7 +48,8 @@ fetch_species_keys <- function(key_field, key_value) {
 }
 
 ## Build Missing-Species List ------------------------
-missing_cache_path <- "outputs/gbif_checklist_missing_species.rds"
+if (!dir.exists("outputs/intermediates/extended")) dir.create("outputs/intermediates/extended", recursive = TRUE)
+missing_cache_path <- "outputs/intermediates/extended/gbif_checklist_missing_species.rds"
 if (file.exists(missing_cache_path)) {
     message("Read existing missing-species list (found in outputs)")
     missing_all <- readRDS(missing_cache_path)
@@ -76,7 +77,7 @@ if (file.exists(missing_cache_path)) {
 message(paste0(nrow(missing_all), " total missing species to screen across ", length(unique(missing_all$taxon)), " taxa."))
 
 ## Select Remaining Species ------------------------
-screen_cache_path <- "outputs/gbif_checklist_screen_results.rds"
+screen_cache_path <- "outputs/intermediates/extended/gbif_checklist_screen_results.rds"
 already_done <- if (file.exists(screen_cache_path)) readRDS(screen_cache_path) else NULL
 remaining <- if (!is.null(already_done)) {
     missing_all %>% filter(!(gbif_id %in% already_done$gbif_id))

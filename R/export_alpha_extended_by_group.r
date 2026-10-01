@@ -4,8 +4,8 @@
 suppressMessages(library(dplyr))
 
 ## Load Screen And Weight Results ------------------------
-screened <- readRDS("outputs/gbif_checklist_screen_results.rds")
-weighted <- readRDS("outputs/gbif_checklist_gap_weights_alpha.rds") %>%
+screened <- readRDS("outputs/intermediates/extended/gbif_checklist_screen_results.rds")
+weighted <- readRDS("outputs/intermediates/extended/gbif_checklist_gap_weights_alpha.rds") %>%
     select(gbif_id, weight, n_points) %>%
     distinct(gbif_id, .keep_all = TRUE)
 
@@ -30,7 +30,7 @@ combined <- screened %>%
     )
 
 ## Export Per-Group CSVs ------------------------
-out_dir <- "outputs/national_lists/by_group_alpha_extended"
+out_dir <- "outputs/results/extended/by_group"
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 for (g in unique(combined$`Taxonomic Group`)) {
     slug <- gsub("[^a-z0-9]+", "_", tolower(g))
@@ -41,6 +41,6 @@ for (g in unique(combined$`Taxonomic Group`)) {
 
 ## Export Combined Discoveries File ------------------------
 discoveries_only <- combined %>% filter(`Discovery (>=20%)` == "Yes")
-combined_out_path <- "outputs/national_lists/belize_priority_species_list_alpha_extension.csv"
+combined_out_path <- "outputs/results/extended/belize_priority_species_list_alpha_extension.csv"
 write.csv(discoveries_only, combined_out_path, row.names = FALSE, na = "")
 message(paste0("\nCombined (>=20% discoveries only): ", nrow(discoveries_only), " species -> ", combined_out_path))

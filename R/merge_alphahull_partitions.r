@@ -5,13 +5,15 @@ suppressMessages(library(dplyr))
 
 ## Define Merge Function ------------------------
 merge_taxon <- function(run_taxon) {
-    out_dir <- "outputs/national_lists/by_group_alpha"
+    results_dir <- "outputs/results/primary/by_group_all"
+    cache_dir <- "outputs/intermediates/primary/by_group"
+    if (!dir.exists(results_dir)) dir.create(results_dir, recursive = TRUE)
     slug <- gsub("[^a-z0-9]+", "_", tolower(run_taxon))
-    final_csv_path <- file.path(out_dir, paste0(slug, ".csv"))
-    main_cache_path <- file.path(out_dir, paste0(slug, "_cache.rds"))
+    final_csv_path <- file.path(results_dir, paste0(slug, ".csv"))
+    main_cache_path <- file.path(cache_dir, paste0(slug, "_cache.rds"))
     pieces <- list()
     if (file.exists(main_cache_path)) pieces[["sequential"]] <- readRDS(main_cache_path)
-    part_paths <- list.files(out_dir, pattern = paste0("^", slug, "_cache_part[0-9]+\\.rds$"), full.names = TRUE)
+    part_paths <- list.files(cache_dir, pattern = paste0("^", slug, "_cache_part[0-9]+\\.rds$"), full.names = TRUE)
     for (p in part_paths) pieces[[p]] <- readRDS(p)
     if (length(pieces) == 0) stop(paste0("No cache files found for ", run_taxon, " - nothing to merge."))
     combined <- bind_rows(pieces)
@@ -30,7 +32,7 @@ merge_taxon <- function(run_taxon) {
         "Saved to ", final_csv_path
     ))
 
-    coord_dir <- "outputs/national_lists/raw_coordinates"
+    coord_dir <- "outputs/intermediates/primary/raw_coordinates"
     if (!dir.exists(coord_dir)) dir.create(coord_dir, recursive = TRUE)
     coord_cache <- list()
     main_coord_path <- file.path(coord_dir, paste0(slug, ".rds"))

@@ -23,7 +23,7 @@ clip_map <- list(
 # Fish use FishBase's Freshwater/Brackish/Saltwater flags for per-species clip
 build_candidates <- function(run_taxon) {
     if (run_taxon == "Fish") {
-        fb <- readRDS("outputs/fishbase/fb_belize_species.rds")
+        fb <- readRDS("outputs/intermediates/fishbase/fb_belize_species.rds")
         candidates <- belize_redlist_taxa %>%
             filter(gbif_id %in% as.character(fb$speciesKey) | species %in% fb$species) %>%
             filter(!is.na(gbif_id))

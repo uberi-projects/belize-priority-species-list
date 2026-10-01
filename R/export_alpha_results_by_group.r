@@ -7,12 +7,12 @@ suppressMessages({
 })
 
 ## Load National Lists ------------------------
-nlr <- readRDS("outputs/national_lists/national_lists_resolved.rds") %>%
+nlr <- readRDS("outputs/intermediates/national_lists/national_lists_resolved.rds") %>%
     select(species, common_name, belize_ranking = national_2025) %>%
     distinct(species, .keep_all = TRUE)
 
 ## Check BirdLife Availability ------------------------
-birdlife_path <- "outputs/national_lists/weights_belize_birdlife.rds"
+birdlife_path <- "outputs/intermediates/primary/weights_belize_birdlife.rds"
 birdlife <- if (file.exists(birdlife_path)) {
     readRDS(birdlife_path) %>%
         select(species, weight_birdlife) %>%
@@ -37,7 +37,7 @@ severity_rank <- function(x) {
 }
 
 ## Define Common-Name Lookup ------------------------
-name_cache_path <- "outputs/vernacular_names_cache.rds"
+name_cache_path <- "outputs/intermediates/primary/vernacular_names_cache.rds"
 name_cache <- if (file.exists(name_cache_path)) readRDS(name_cache_path) else data.frame(gbif_id = character(), common_name = character(), stringsAsFactors = FALSE)
 lookup_common_name <- function(gbif_id) {
     res <- tryCatch(rgbif::name_usage(key = as.numeric(gbif_id), data = "vernacularNames"), error = function(e) NULL)
@@ -54,12 +54,12 @@ group_labels <- c(
     corals = "Corals", sharks_rays = "Sharks & Rays", mammals = "Mammals", insects = "Insects",
     birds = "Birds", fish = "Fish", plants = "Plants"
 )
-out_dir <- "outputs/national_lists/by_group_alpha_results"
+out_dir <- "outputs/results/primary/by_group_filtered"
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 
 ## Build And Export Per-Group CSVs ------------------------
 for (g in groups) {
-    src_path <- file.path("outputs/national_lists/by_group_alpha", paste0(g, ".csv"))
+    src_path <- file.path("outputs/results/primary/by_group_all", paste0(g, ".csv"))
     d <- read.csv(src_path, stringsAsFactors = FALSE, colClasses = c(gbif_id = "character"))
     d <- d %>%
         left_join(nlr, by = "species") %>%

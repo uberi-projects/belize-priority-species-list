@@ -15,18 +15,18 @@ source("R/define_alphahull_helpers.r")
 if (!exists("use_cached_coords")) use_cached_coords <- FALSE
 
 ## Select Candidates ------------------------
-screened <- readRDS("outputs/gbif_checklist_screen_results.rds")
+screened <- readRDS("outputs/intermediates/extended/gbif_checklist_screen_results.rds")
 candidates <- screened %>% filter(clears_gate)
 message(paste0(nrow(candidates), " species clear the screen and need a range-share computation."))
 
 ## Select Remaining Species ------------------------
-weights_cache_path <- "outputs/gbif_checklist_gap_weights_alpha.rds"
+weights_cache_path <- "outputs/intermediates/extended/gbif_checklist_gap_weights_alpha.rds"
 already_done <- if (file.exists(weights_cache_path)) readRDS(weights_cache_path) else NULL
 remaining <- if (!is.null(already_done)) candidates %>% filter(!(gbif_id %in% already_done$gbif_id)) else candidates
 message(paste0(nrow(candidates) - nrow(remaining), " already checkpointed, ", nrow(remaining), " remaining."))
 
 ## Compute Range Shares By Taxon ------------------------
-coord_dir <- "outputs/national_lists/raw_coordinates"
+coord_dir <- "outputs/intermediates/primary/raw_coordinates"
 if (!dir.exists(coord_dir)) dir.create(coord_dir, recursive = TRUE)
 batch_size <- 50
 for (run_taxon in unique(remaining$taxon)) {

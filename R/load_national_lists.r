@@ -69,7 +69,7 @@ national_lists_wide <- national_lists_wide %>%
     )
 
 ## Resolve GBIF Taxon Keys ------------------------
-directory_national_lists <- "outputs/national_lists"
+directory_national_lists <- "outputs/intermediates/national_lists"
 if (!dir.exists(directory_national_lists)) {
     dir.create(directory_national_lists, recursive = TRUE)
 }
@@ -179,8 +179,10 @@ if (exists("belize_redlist_noDD") && exists("belize_redlist_taxa")) {
 }
 
 ## Export For Review ------------------------
+results_dir_primary <- "outputs/results/primary"
+if (!dir.exists(results_dir_primary)) dir.create(results_dir_primary, recursive = TRUE)
 saveRDS(national_lists_resolved, file.path(directory_national_lists, "national_lists_resolved.rds"))
-write.csv(national_lists_resolved, file.path(directory_national_lists, "national_lists_resolved.csv"), row.names = FALSE)
+write.csv(national_lists_resolved, file.path(results_dir_primary, "national_lists_resolved.csv"), row.names = FALSE)
 message(paste0(
     nrow(national_lists_resolved), " unique species across all three lists, ",
     sum(national_lists_resolved$unresolved), " unresolved against GBIF backbone."

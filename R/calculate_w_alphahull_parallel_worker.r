@@ -21,7 +21,7 @@ source("R/build_belize_boundary.r")
 source("R/define_alphahull_helpers.r")
 
 ## Build Candidate Pool ------------------------
-out_dir <- "outputs/national_lists/by_group_alpha"
+out_dir <- "outputs/intermediates/primary/by_group"
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 slug <- gsub("[^a-z0-9]+", "_", tolower(run_taxon))
 batch_size <- 20
@@ -48,7 +48,7 @@ remaining <- if (!is.null(already_done)) my_slice %>% filter(!(gbif_id %in% alre
 message(paste0(nrow(my_slice) - nrow(remaining), " already checkpointed by this worker, ", nrow(remaining), " remaining."))
 
 ## Load Coordinate Cache ------------------------
-coord_dir <- "outputs/national_lists/raw_coordinates"
+coord_dir <- "outputs/intermediates/primary/raw_coordinates"
 if (!dir.exists(coord_dir)) dir.create(coord_dir, recursive = TRUE)
 coord_cache <- list()
 main_coord_path <- file.path(coord_dir, paste0(slug, ".rds"))

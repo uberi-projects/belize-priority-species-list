@@ -10,6 +10,11 @@
 !/basemap/.gitkeep
 !/basemap/README.md
 
+# Generated outputs - not tracked, only the folder structure is -----------------------------------------
+/outputs/**
+!/outputs/**/
+!/outputs/**/.gitkeep
+
 # R environment variables -----------------------------------------
 .Renviron
 

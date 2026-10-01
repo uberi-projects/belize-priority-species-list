@@ -18,7 +18,7 @@ source("R/build_belize_boundary.r")
 source("R/define_alphahull_helpers.r")
 
 ## Select Partition Slice ------------------------
-out_dir <- "outputs/national_lists/by_group_alpha"
+out_dir <- "outputs/intermediates/primary/by_group"
 failed <- readRDS(file.path(out_dir, "fetch_failed_for_retry.rds"))
 message(paste0("Worker ", partition_id, "/", n_partitions, ": ", nrow(failed), " total species to retry."))
 my_slice <- failed[(seq_len(nrow(failed)) %% n_partitions) == (partition_id %% n_partitions), ]
