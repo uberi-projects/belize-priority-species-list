@@ -44,6 +44,21 @@ build_candidates <- function(run_taxon) {
     candidates
 }
 
+## Fetch GBIF Coordinates ------------------------
+fetch_gbif_coords <- function(gbif_id, max_retries = 3, retry_wait_sec = 5) {
+    fetch <- NULL
+    for (attempt in seq_len(max_retries)) {
+        fetch <- try(occ_data(taxonKey = gbif_id, hasCoordinate = TRUE, hasGeospatialIssue = FALSE, limit = 5000), silent = TRUE)
+        if (!inherits(fetch, "try-error") && !is.null(fetch$data)) break
+        if (attempt < max_retries) Sys.sleep(retry_wait_sec)
+    }
+    if (inherits(fetch, "try-error") || is.null(fetch$data)) return(NULL)
+    fetch$data %>%
+        select(decimalLongitude, decimalLatitude) %>%
+        filter(!is.na(decimalLongitude), !is.na(decimalLatitude)) %>%
+        distinct()
+}
+
 ## Define Alpha-Hull Wrapper ------------------------
 # No in-process timeout guard: setTimeLimit()/callr(timeout=)/system2(timeout=) all crash this R
 # session outright when they fire, worse than an occasional slow species. A stall is rare and
@@ -56,20 +71,11 @@ run_alpha_hull <- function(gbif_id, species_name, clip, cached_coords = NULL, us
     if (use_cached_coords && !is.null(cached_coords)) {
         coords <- cached_coords
     } else {
-        fetch <- NULL
-        for (attempt in seq_len(max_retries)) {
-            fetch <- try(occ_data(taxonKey = gbif_id, hasCoordinate = TRUE, hasGeospatialIssue = FALSE, limit = 5000), silent = TRUE)
-            if (!inherits(fetch, "try-error") && !is.null(fetch$data)) break
-            if (attempt < max_retries) Sys.sleep(retry_wait_sec)
-        }
-        if (inherits(fetch, "try-error") || is.null(fetch$data)) {
+        coords <- fetch_gbif_coords(gbif_id, max_retries, retry_wait_sec)
+        if (is.null(coords)) {
             return(wrap(data.frame(gbif_id = gbif_id, species = species_name, n_points = NA, alpha = NA_character_,
                 n_parts = NA, global_area_km2 = NA, belize_area_km2 = NA, weight = NA, note = "GBIF fetch failed after retries")))
         }
-        coords <- fetch$data %>%
-            select(decimalLongitude, decimalLatitude) %>%
-            filter(!is.na(decimalLongitude), !is.na(decimalLatitude)) %>%
-            distinct()
     }
     if (nrow(coords) < 3) {
         return(wrap(data.frame(gbif_id = gbif_id, species = species_name, n_points = nrow(coords), alpha = NA_character_,

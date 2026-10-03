@@ -35,25 +35,22 @@ for (i in seq_along(batch_indices)) {
         message("Skipping batch ", i, " (found in outputs)")
     } else {
         taxa <- belize_redlist_noDD$taxon_scientific_name[batch_indices[[i]]]
-        taxonomy <- classification(taxa, db = "gbif", ask = FALSE, rank = "species")
-        taxonomy <- taxonomy[!sapply(taxonomy, is.logical)]
-        tax_df <- imap_dfr(taxonomy, function(.x, .y) {
-            species_id <- if ("species" %in% .x$rank) {
-                .x$id[.x$rank == "species"]
-            } else {
-                NA
-            }
-            .x %>%
-                mutate(
-                    original_species = .y,
-                    gbif_id = species_id
-                )
-        }) %>%
-            select(name, rank, original_species, gbif_id) %>%
-            pivot_wider(
-                names_from = rank,
-                values_from = name,
-                values_fn = ~ .x[1]
+        # name_backbone_checklist() deterministically returns the single best-confidence match per
+        # name. classification(db="gbif", ask=FALSE) (the old approach) silently drops any name
+        # where GBIF's backbone has more than one same-confidence candidate instead of picking one -
+        # confirmed to lose ~420 real Belize Red List species this way (MigrationPlan.md §19).
+        matches <- name_backbone_checklist(taxa, verbose = FALSE)
+        tax_df <- matches %>%
+            filter(rank == "SPECIES") %>%
+            # a synonym's usageKey is its own id, not the accepted species' - prefer speciesKey
+            # (the accepted species-level id) when the two diverge, since that's what GBIF
+            # occurrence records are actually tagged with
+            mutate(gbif_id = if_else(status == "SYNONYM" & !is.na(speciesKey), speciesKey, usageKey)) %>%
+            filter(!is.na(gbif_id)) %>%
+            transmute(
+                original_species = verbatim_name,
+                gbif_id = as.character(gbif_id),
+                kingdom, phylum, class, order, family, genus, species
             )
         saveRDS(tax_df, batch_file)
     }

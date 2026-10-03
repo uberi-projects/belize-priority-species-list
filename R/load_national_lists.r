@@ -78,25 +78,24 @@ if (file.exists(taxonomy_file)) {
     tax_df <- readRDS(taxonomy_file)
     message("Read existing national lists taxonomy file (found in outputs)")
 } else {
-    taxonomy <- classification(unique(national_lists_wide$gbif_lookup_name), db = "gbif", ask = FALSE, rank = "species")
-    taxonomy <- taxonomy[!sapply(taxonomy, is.logical)]
-    tax_df <- imap_dfr(taxonomy, function(.x, .y) {
-        species_id <- if ("species" %in% .x$rank) {
-            .x$id[.x$rank == "species"]
-        } else {
-            NA
-        }
-        .x %>%
-            mutate(
-                original_species = .y,
-                gbif_id = species_id
-            )
-    }) %>%
-        select(name, rank, original_species, gbif_id) %>%
-        pivot_wider(
-            names_from = rank,
-            values_from = name,
-            values_fn = ~ .x[1]
+    # name_backbone_checklist() deterministically returns the single best-confidence match per
+    # name. classification(db="gbif", ask=FALSE) (the old approach) silently drops any name where
+    # GBIF's backbone has more than one same-confidence candidate instead of picking one - the
+    # fallback step below already recovers everything this drops (confirmed: 12/12 recovered in
+    # the current cache), but resolving it correctly on the first pass avoids depending on that
+    # second, slower, one-name-at-a-time pass at all (MigrationPlan.md §19).
+    matches <- name_backbone_checklist(unique(national_lists_wide$gbif_lookup_name), verbose = FALSE)
+    tax_df <- matches %>%
+        filter(rank == "SPECIES") %>%
+        # a synonym's usageKey is its own id, not the accepted species' - prefer speciesKey (the
+        # accepted species-level id) when the two diverge, since that's what GBIF occurrence
+        # records are actually tagged with
+        mutate(gbif_id = if_else(status == "SYNONYM" & !is.na(speciesKey), speciesKey, usageKey)) %>%
+        filter(!is.na(gbif_id)) %>%
+        transmute(
+            original_species = verbatim_name,
+            gbif_id = as.character(gbif_id),
+            kingdom, phylum, class, order, family, genus, species
         )
     saveRDS(tax_df, taxonomy_file)
 }
