@@ -100,7 +100,13 @@ merge_taxon("Birds")
    way still needs to go through the sequential option above - it automatically skips taxa whose
    final CSV already exists, so it's safe to run after parallel runs to pick up the rest.
 
-**(Optional) Retry transient GBIF fetch failures.**: First build the retry input - not yet produced by any script, so build it directly:
+**(Optional) Retry transient GBIF fetch failures.**: Retry failed fetches from GBIF. To automatically loop:
+```r
+source("R/load_packages.r")
+source("R/retry_gbif_fetch_failures_loop.r")
+```
+
+For manual control instead, first build retry input directly:
 ```r
 library(dplyr)
 groups <- c("reptiles", "fungi", "amphibians", "mollusks", "corals", "sharks_rays", "mammals", "insects", "birds", "fish", "plants")
@@ -313,18 +319,19 @@ produce lands, split into two trees:
 6. `calculate_w_alphahull_national_lists.r` runs the alpha-hull range-share calculation taxon by taxon, single-threaded, checkpointed.
 7. `calculate_w_alphahull_parallel_worker.r` is the same calculation split across parallel processes, for the largest taxa.
 8. `merge_alphahull_partitions.r` combines parallel workers' results into each taxon's final CSV.
-9. `retry_gbif_fetch_failures.r` retries species that hit a transient GBIF fetch failure.
-10. `merge_fetch_retry_results.r` merges retry results back into the per-taxon CSVs.
-11. `calculate_w_birdlife.r` computes a second, independent range-share weight for birds from BirdLife's range maps. See "Acquiring Data" for how to get `BOTW_2025.gpkg`. Range is the union of every BirdLife polygon for a species where presence is "Extant" or "Probably Extant," origin is "Native" or "Reintroduced," and seasonal is "Resident," "Breeding," or "Non-breeding."
-12. `export_alpha_results_by_group.r` builds the final, reader-facing per-taxon CSVs.
-13. `build_citation_taxon_keys.r` builds the deduplicated GBIF taxon-key list, across all 11 taxa, that the citation download covers.
-14. `submit_gbif_citation_download.r` submits a GBIF occurrence download covering the species pool used, for a citable DOI, and polls until it's ready.
-15. `check_gbif_checklist_gaps.r` sizes how many Belize-occurring species (per GBIF) are missing from the IUCN-based candidate pool, for the focus taxa (excludes Fish). Diagnostic only.
-16. `screen_gbif_checklist_gaps.r` builds the full missing-species list and screens each by Belize record share, to flag which are worth a full range-share computation.
-17. `retry_gbif_checklist_screen.r` retries missing species that hit a count-probe failure during screening.
-18. `calculate_w_alphahull_checklist_gaps.r` computes alpha-hull range shares for missing species that cleared the screen.
-19. `export_alpha_extended_by_group.r` exports the extended-list results as a companion set of per-taxon CSVs, plus a combined file of genuine >=20% discoveries.
-20. `calculate_w_alphahull_custom_species.r` computes alpha-hull range share, global IUCN status, and Belize national status for a user-specified species or short list of species - works standalone on a fresh clone, without the IUCN-based candidate pool. See "Pipeline 2: Custom Species" above.
+9. `retry_gbif_fetch_failures.r` retries species that hit a transient GBIF fetch failure. See `retry_gbif_fetch_failures_loop.r` below for the version actively used, as this is a single pass worker.
+10. `merge_fetch_retry_results.r` merges one retry pass's results back into the per-taxon CSVs.
+11. `retry_gbif_fetch_failures_loop.r` loops the retry-and-merge cycle above until either nothing is left flagged as a fetch failure, or a pass recovers nothing new (some species genuinely have no usable GBIF data - that's a stop condition, not a bug). This is the one `run_pipeline.r` actually calls.
+12. `calculate_w_birdlife.r` computes a second, independent range-share weight for birds from BirdLife's range maps. See "Acquiring Data" for how to get `BOTW_2025.gpkg`. Range is the union of every BirdLife polygon for a species where presence is "Extant" or "Probably Extant," origin is "Native" or "Reintroduced," and seasonal is "Resident," "Breeding," or "Non-breeding."
+13. `export_alpha_results_by_group.r` builds the final, reader-facing per-taxon CSVs.
+14. `build_citation_taxon_keys.r` builds the deduplicated GBIF taxon-key list, across all 11 taxa, that the citation download covers.
+15. `submit_gbif_citation_download.r` submits a GBIF occurrence download covering the species pool used, for a citable DOI, and polls until it's ready.
+16. `check_gbif_checklist_gaps.r` sizes how many Belize-occurring species (per GBIF) are missing from the IUCN-based candidate pool, for the focus taxa (excludes Fish). Diagnostic only.
+17. `screen_gbif_checklist_gaps.r` builds the full missing-species list and screens each by Belize record share, to flag which are worth a full range-share computation.
+18. `retry_gbif_checklist_screen.r` retries missing species that hit a count-probe failure during screening.
+19. `calculate_w_alphahull_checklist_gaps.r` computes alpha-hull range shares for missing species that cleared the screen.
+20. `export_alpha_extended_by_group.r` exports the extended-list results as a companion set of per-taxon CSVs, plus a combined file of genuine >=20% discoveries.
+21. `calculate_w_alphahull_custom_species.r` computes alpha-hull range share, global IUCN status, and Belize national status for a user-specified species or short list of species - works standalone on a fresh clone, without the IUCN-based candidate pool. See "Pipeline 2: Custom Species" above.
 
 **`renv/`** manages pinned package versions (`renv.lock`).
 

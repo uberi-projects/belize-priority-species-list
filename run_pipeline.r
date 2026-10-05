@@ -19,21 +19,7 @@ source("R/build_belize_boundary.r")
 source("R/calculate_w_alphahull_national_lists.r")
 
 ## Retry Transient GBIF Fetch Failures ------------------------
-groups <- c("reptiles", "fungi", "amphibians", "mollusks", "corals", "sharks_rays", "mammals", "insects", "birds", "fish", "plants")
-fetch_failed <- bind_rows(lapply(groups, function(g) {
-    read.csv(file.path("outputs/results/primary/by_group_all", paste0(g, ".csv")), colClasses = c(gbif_id = "character")) %>%
-        filter(note == "GBIF fetch failed after retries") %>%
-        transmute(gbif_id, species, clip, taxon = g)
-}))
-if (nrow(fetch_failed) > 0) {
-    message(paste0(nrow(fetch_failed), " species hit a transient GBIF fetch failure - retrying..."))
-    if (!dir.exists("outputs/intermediates/primary/by_group")) dir.create("outputs/intermediates/primary/by_group", recursive = TRUE)
-    saveRDS(fetch_failed, "outputs/intermediates/primary/by_group/fetch_failed_for_retry.rds")
-    system2("Rscript", c("R/retry_gbif_fetch_failures.r", "1", "1"))
-    source("R/merge_fetch_retry_results.r")
-} else {
-    message("No transient GBIF fetch failures to retry.")
-}
+source("R/retry_gbif_fetch_failures_loop.r")
 
 ## Compute BirdLife Comparison Weights ------------------------
 if (file.exists("birdlife_ranges/BOTW_2025.gpkg")) {

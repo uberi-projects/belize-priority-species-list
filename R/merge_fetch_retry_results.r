@@ -31,4 +31,8 @@ for (g in groups) {
     write.csv(d, csv_path, row.names = FALSE, na = "")
     message(paste0(g, ": replaced ", n_replaced, " rows (", sum(!is.na(this_group_retries$weight)), " now have a real weight)."))
 }
+
+## Clear Partition Checkpoints ------------------------
+file.remove(parts)
+
 message("\nDone merging. Now re-run R/export_alpha_results_by_group.r to update the formatted deliverable files.")
