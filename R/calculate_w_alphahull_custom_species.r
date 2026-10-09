@@ -97,6 +97,46 @@ if (nrow(remaining) > 0) {
 write.csv(already_done, out_path, row.names = FALSE, na = "")
 message(paste0("\n", nrow(already_done), " species -> ", out_path))
 
+## Export Formatted Results ------------------------
+name_cache_path <- "outputs/intermediates/primary/vernacular_names_cache.rds"
+name_cache <- if (file.exists(name_cache_path)) readRDS(name_cache_path) else data.frame(gbif_id = character(), common_name = character(), stringsAsFactors = FALSE)
+lookup_common_name <- function(gbif_id) {
+    res <- tryCatch(rgbif::name_usage(key = as.numeric(gbif_id), data = "vernacularNames"), error = function(e) NULL)
+    if (is.null(res) || is.null(res$data) || nrow(res$data) == 0) return(NA_character_)
+    eng <- res$data[tolower(res$data$language) %in% c("eng", "en"), ]
+    if (nrow(eng) == 0) return(NA_character_)
+    eng$vernacularName[1]
+}
+already_done <- already_done %>% mutate(gbif_id = as.character(gbif_id))
+need_lookup <- already_done %>% filter(!(gbif_id %in% name_cache$gbif_id)) %>% pull(gbif_id) %>% unique()
+if (length(need_lookup) > 0) {
+    new_names <- bind_rows(lapply(need_lookup, function(id) {
+        data.frame(gbif_id = id, common_name = lookup_common_name(id), stringsAsFactors = FALSE)
+    }))
+    name_cache <- bind_rows(name_cache, new_names) %>% distinct(gbif_id, .keep_all = TRUE)
+    saveRDS(name_cache, name_cache_path)
+}
+formatted <- already_done %>%
+    left_join(name_cache, by = "gbif_id") %>%
+    mutate(common_name = ifelse(is.na(common_name), NA_character_, tools::toTitleCase(common_name))) %>%
+    arrange(desc(weight)) %>%
+    transmute(
+        `Common Name` = common_name,
+        `Scientific Name` = species,
+        `IUCN Ranking` = iucn_category,
+        `Belize Ranking` = belize_ranking,
+        `Range Share` = case_when(
+            !is.na(weight) ~ paste0(sprintf("%.2f", round(weight * 100, 2)), "%"),
+            grepl("^getDynamicAlphaHull failed|hull geometry invalid/empty", note) ~ "Invalid Geometry",
+            TRUE ~ "Data Deficient"
+        ),
+        Responsibility = if_else(!is.na(weight), strrep("~", floor(weight * 100 / 20)), NA_character_),
+        Sample = n_points
+    )
+formatted_path <- "outputs/results/custom/custom_species_results_formatted.csv"
+write.csv(formatted, formatted_path, row.names = FALSE, na = "")
+message(paste0(nrow(formatted), " species -> ", formatted_path))
+
 ## Submit Citation Download (optional) ------------------------
 if (request_citation_doi) {
     download_key <- occ_download(

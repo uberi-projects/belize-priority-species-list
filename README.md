@@ -185,7 +185,8 @@ source("R/build_belize_boundary.r")
 source("R/calculate_w_alphahull_custom_species.r")
 ```
 Results are written to `outputs/results/custom/custom_species_results.csv`, one row per species,
-with `iucn_category` (global) and `belize_ranking`.
+with `iucn_category` (global) and `belize_ranking`. A second, formatted version is written alongside it to
+`outputs/results/custom/custom_species_results_formatted.csv`.
 
 By default this also submits a GBIF download covering just this run's species and gets a citable
 DOI for the data used. Set `request_citation_doi <- FALSE` before running to skip this step. Saves download key to
