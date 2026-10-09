@@ -17,6 +17,7 @@ This codebase creates output tables presenting the IUCN redlist status, Belizean
   - [Data](#data)
     - [Acquiring Data](#acquiring-data)
     - [Pre-Included Data](#pre-included-data)
+  - [AI Disclaimer](#ai-disclaimer)
   - [Literature Cited](#literature-cited)
 
 ## Using this Repository
@@ -361,6 +362,11 @@ Several datasets need to be acquired and placed in the appropriate repository fo
 ### Pre-Included Data
 
 1. **`Belize_Threatened_Species_Table.csv`**  list of species previously assessed as vulnerable  in Belize from Belize Forest Department (Belize Forest Department, 2025; Belize Forest Department Wildlife Programme, 2020).
+
+
+## AI Disclaimer
+
+The AI model Sonnet 5.5 (Anthropic) was used as a tool through the Claude Code for VS Code extension to assist in code development, bugtesting, and documentation of this codebase. However, the authors of this repository take full responsibility for the quality and accuracy of the codebase, and do not defer reponsibility of errors to the AI model in any way.
 
 
 ## Literature Cited
