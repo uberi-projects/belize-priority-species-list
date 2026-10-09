@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "uberi-projects/belize-priority-species-list"
+version: "1.0.0"
+date-released: "2026-10-09"
+type: software
+authors:
+  - given-names: Jessica C.
+    family-names: Boles
+    name: "Jessica C. Boles (sharp-lilac)"
+    orcid: "https://orcid.org/0000-0002-4371-7621"
+license: "CC-BY-4.0"
+url: "https://github.com/uberi-projects/belize-priority-species-list"
+doi: "https://doi.org/10.5281/zenodo.23269833"
