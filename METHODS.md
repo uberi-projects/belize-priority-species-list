@@ -16,12 +16,12 @@ National Responsibility Species (NRS) are species in which the contribution of t
 
 A specific species qualifies for the priority species list if it meets **any** of the following criteria:
 
-| CRITERION 1 | CRITERION 2 | CRITERION 3 |
-|---|---|---|
-| **Globally Threatened** | **Nationally Threatened** | **National Responsibility** |
+| CRITERION 1                                                                                                                              | CRITERION 2                                                                   | CRITERION 3                                                          |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Globally Threatened**                                                                                                                  | **Nationally Threatened**                                                     | **National Responsibility**                                          |
 | Is a Belizean species classified **on the IUCN Red List** as category Critically Endangered, Endangered, Vulnerable, or Near Threatened. | Is a species listed on Belize's 2020 or 2025 **national threat assessments**. | Has an estimated **global range share** in Belize of 20% or greater. |
 
-The species must also be in one of the focus taxa, which include mammals, birds, reptiles, amphibians, sharks and rays, bony fish, insects, mollusks, corals, fungi, and plants. The list of candidate species to test against these criteria is acquired from Fishbase for fish (retrieved 2026) (Froese & Pauly, 2026), and from IUCN-assessed species for all other taxa (retrieved 2026) (IUCN, 2026).
+The species must also be in one of the focus taxa, which include mammals, birds, reptiles, amphibians, sharks and rays, bony fish, insects, mollusks, corals, fungi, and plants. The list of candidate species to test against these criteria is acquired from Fishbase for fish (retrieved 2026) (Froese & Pauly, 2026), and from IUCN-assessed species for all other taxa (retrieved 2026) (IUCN, 2026). Because FishBase also lists cartilaginous fishes, species in the classes Elasmobranchii and Holocephali are reported only under Sharks & Rays.
 
 ## Data Sources
 

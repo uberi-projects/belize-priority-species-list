@@ -5,11 +5,11 @@ taxon_class_map <- list(
     Amphibians = c("Amphibia"),
     Birds = c("Aves"),
     Corals = c("Anthozoa", "Hydrozoa"),
-    Fungi = c("Agaricomycetes", "Jungermanniopsida"),
+    Fungi = c("Agaricomycetes"),
     Insects = c("Insecta"),
     Mammals = c("Mammalia"),
     Mollusks = c("Gastropoda", "Bivalvia", "Cephalopoda", "Polyplacophora", "Scaphopoda"),
-    Plants = c("Magnoliopsida", "Liliopsida", "Cycadopsida", "Pinopsida"),
+    Plants = c("Magnoliopsida", "Liliopsida", "Cycadopsida", "Pinopsida", "Jungermanniopsida"),
     Reptiles = c("Squamata", "Testudines", "Crocodylia"),
     `Sharks & Rays` = c("Elasmobranchii", "Holocephali")
 )
@@ -20,13 +20,14 @@ clip_map <- list(
 )
 
 ## Build Candidate Pool ------------------------
-# Fish use FishBase's Freshwater/Brackish/Saltwater flags for per-species clip
+# Fish use FishBase's Freshwater/Brackish/Saltwater flags for per-species clip.
+# Cartilaginous fishes are in FishBase too but are handled only under Sharks & Rays.
 build_candidates <- function(run_taxon) {
     if (run_taxon == "Fish") {
         fb <- readRDS("outputs/intermediates/fishbase/fb_belize_species.rds")
         candidates <- belize_redlist_taxa %>%
             filter(gbif_id %in% as.character(fb$speciesKey) | species %in% fb$species) %>%
-            filter(!is.na(gbif_id))
+            filter(!is.na(gbif_id), !(class %in% taxon_class_map[["Sharks & Rays"]]))
         fb_join <- fb %>% distinct(species, .keep_all = TRUE) %>% select(species, Freshwater, Brackish, Saltwater)
         candidates <- candidates %>%
             left_join(fb_join, by = "species") %>%
